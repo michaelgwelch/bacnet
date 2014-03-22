@@ -1,9 +1,9 @@
-module TagSpec where
+module Tag.CoreSpec where
 
 import Test.Hspec
 import Test.QuickCheck hiding ((.&.))
 import Data.Bits
-import Tag
+import Tag.Core
 
 spec :: Spec
 spec = do

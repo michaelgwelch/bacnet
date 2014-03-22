@@ -1,4 +1,4 @@
-module Tag (
+module Tag.Core (
   isAP,
   isCS,
   lvt,
