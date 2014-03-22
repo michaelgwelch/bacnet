@@ -1,9 +1,13 @@
 module Tag (
   isAP,
+  isCS,
   ) where
 
 import Data.Word
 import Data.Bits
 
 isAP :: Word8 -> Bool
-isAP = not . (flip testBit) 3
+isAP = not . isCS
+
+isCS :: Word8 -> Bool
+isCS = flip testBit 3
