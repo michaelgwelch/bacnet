@@ -24,6 +24,6 @@ spec = do
     it "returns Nothing on 0x1w where w is not 0 or 1" $
       property $ forAll (choose (2,15))
       (\b -> runReader readAPTag [(0x10 + b)] `shouldBe` Nothing)
-    it "returns Just(apUnsignedTag 0, bs) on input (0x21 : 0x00 : bs)" $
-      property $ (\bs -> runReader readAPTag (0x21 : 0x00 : bs) `shouldBe`
+    it "returns Just(apUnsignedTag 0, bs) on input (0x21 : bs)" $
+      property $ (\bs -> runReader readAPTag (0x21 : bs) `shouldBe`
       Just(apUnsignedTag 0, bs))
