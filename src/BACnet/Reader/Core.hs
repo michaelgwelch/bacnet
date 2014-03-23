@@ -1,6 +1,7 @@
 module BACnet.Reader.Core
   (
   Reader,
+  peek,
   byte,
   bytes,
   sat,
@@ -23,6 +24,11 @@ bindReader ra f =
   R (\inp -> case runReader ra inp of
               Nothing -> Nothing
               Just(val, out) -> runReader (f val) out)
+
+peek :: Reader Word8
+peek = R (\inp -> case inp of
+                    [] -> Nothing
+                    (b:bs) -> Just(b, inp))
 
 byte :: Reader Word8
 byte = R (\inp -> case inp of

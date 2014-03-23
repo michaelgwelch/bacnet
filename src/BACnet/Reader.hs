@@ -1,18 +1,32 @@
 module BACnet.Reader
   (
     Reader,
+    runReader,
+    readNullAP,
+    readBoolAP,
     readUnsignedAP
   ) where
 
+import Control.Applicative
 import Data.Word
 import BACnet.Tag
 import BACnet.Reader.Core
 
+
+readNullAP :: Reader ()
+readNullAP = pure (const ()) <*> readNullAPTag
+
+readBoolAP :: Reader Bool
+readBoolAP = pure (\(BoolAP val) -> val) <*> readBoolAPTag
+
+foldbytes :: [Word8] -> Word
+foldbytes = foldl (\acc w -> acc * 256 + fromIntegral w) 0
+
+
 readUnsignedAP' :: Reader Word
-readUnsignedAP' = byte >>= \b -> readUnsignedAPTag b >>= \(UnsignedAP len) ->
+readUnsignedAP' = readUnsignedAPTag >>= \(UnsignedAP len) ->
                   bytes (fromIntegral len) >>= \bs ->
-                  let words = map fromIntegral bs in
-                  return $ foldl (\acc w -> acc * 256 + w) 0 words
+                  return $ foldbytes bs
 
 readUnsignedAP :: Reader Word32
 readUnsignedAP = fmap fromIntegral readUnsignedAP'

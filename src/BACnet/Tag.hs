@@ -7,10 +7,13 @@ module BACnet.Tag
   apTrueTag,
   apFalseTag,
   apUnsignedTag,
+  readNullAPTag,
+  readBoolAPTag,
   readUnsignedAPTag,
   Tag(..)
   ) where
 
+import Control.Applicative
 import Control.Exception (assert)
 import Data.Word
 import qualified BACnet.Tag.Core as TC
@@ -43,7 +46,7 @@ apFalseTag = BoolAP False
 apUnsignedTag :: Word -> Tag
 apUnsignedTag w | w <= fromIntegral (maxBound :: Word8) = UnsignedAP 1
                 | w <= fromIntegral (maxBound :: Word16) = UnsignedAP 2
-                | w <= fromIntegral 0x0FFF = UnsignedAP 3
+                | w <= 0x0FFF = UnsignedAP 3
                 | w <= fromIntegral (maxBound :: Word32) = UnsignedAP 4
                 | otherwise = undefined
 
@@ -56,15 +59,15 @@ readTag = byte >>= \b ->
 
 assertNotEmptyAndAP :: [Word8] -> Maybe(Tag, [Word8]) -> Maybe(Tag, [Word8])
 assertNotEmptyAndAP [] _ = Nothing
-assertNotEmptyAndAP (b:bs) result = if (TC.isAP b) then result else Nothing
+assertNotEmptyAndAP (b:bs) result = if TC.isAP b then result else Nothing
 
 readAPTag :: Reader Tag
-readAPTag = byte >>= \b ->
+readAPTag = peek >>= \b ->
             if TC.isCS b then failure else
                 case TC.tagNumber b of
-                  0 -> readNullAPTag b
-                  1 -> readBoolAPTag b
-                  2 -> readUnsignedAPTag b
+                  0 -> readNullAPTag
+                  1 -> readBoolAPTag
+                  2 -> readUnsignedAPTag
                   3 -> undefined
                   4 -> undefined
                   5 -> undefined
@@ -77,15 +80,13 @@ readAPTag = byte >>= \b ->
                   12-> undefined
 
 
-readNullAPTag :: Word8 -> Reader Tag
-readNullAPTag 0x00 = return NullAP
-readNullAPTag _ = failure
+readNullAPTag :: Reader Tag
+readNullAPTag = sat (== 0x00) >> return NullAP
 
-readBoolAPTag :: Word8 -> Reader Tag
-readBoolAPTag 0x10 = return $ BoolAP False
-readBoolAPTag 0x11 = return $ BoolAP True
-readBoolAPTag _ = failure
+readBoolAPTag :: Reader Tag
+readBoolAPTag = (sat (== 0x10) >> return (BoolAP False)) <|>
+                (sat (== 0x11) >> return (BoolAP True))
 
-readUnsignedAPTag :: Word8 -> Reader Tag
-readUnsignedAPTag 0x21 = return $ UnsignedAP 1
-readUnsignedAPTag _ = failure
+readUnsignedAPTag :: Reader Tag
+readUnsignedAPTag = pure (UnsignedAP . fromIntegral . TC.lvt) <*>
+                    sat (\b -> TC.tagNumber b == 2 && TC.isAP b)
