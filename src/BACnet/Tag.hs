@@ -6,29 +6,45 @@ module BACnet.Tag
   apNullTag,
   apTrueTag,
   apFalseTag,
-  apUnsignedTag
+  apUnsignedTag,
+  readUnsignedAPTag,
+  Tag(..)
   ) where
 
 import Control.Exception (assert)
 import Data.Word
 import qualified BACnet.Tag.Core as TC
 import BACnet.Reader.Core
-data Tag = Tag [Word8] deriving (Show, Eq)
+data Tag =
+          NullAP
+        | BoolAP Bool
+        | UnsignedAP Word32
+        | SignedAP Word32
+        | RealAP
+        | DoubleAP
+        | OctetStringAP Word32 -- length
+        | CharacterStringAP Word8 Word32 -- encoding, length
+        | BitStringAP Word32 -- length
+        | EnumeratedAP Word32 -- length
+        | DateAP
+        | TimeAP
+        | ObjectIdentifierAP
+  deriving (Show, Eq)
 
 apNullTag :: Tag
-apNullTag = Tag [0x00]
+apNullTag = NullAP
 
 apTrueTag :: Tag
-apTrueTag = Tag [0x11]
+apTrueTag = BoolAP True
 
 apFalseTag :: Tag
-apFalseTag = Tag [0x10]
+apFalseTag = BoolAP False
 
 apUnsignedTag :: Word -> Tag
-apUnsignedTag w | w <= fromIntegral (maxBound :: Word8) = Tag [0x21]
-                | w <= fromIntegral (maxBound :: Word16) = Tag [0x22]
-                | w <= fromIntegral 0x0FFF = Tag [0x23]
-                | w <= fromIntegral (maxBound :: Word32) = Tag [0x24]
+apUnsignedTag w | w <= fromIntegral (maxBound :: Word8) = UnsignedAP 1
+                | w <= fromIntegral (maxBound :: Word16) = UnsignedAP 2
+                | w <= fromIntegral 0x0FFF = UnsignedAP 3
+                | w <= fromIntegral (maxBound :: Word32) = UnsignedAP 4
                 | otherwise = undefined
 
 failure :: Reader a
@@ -46,9 +62,9 @@ readAPTag :: Reader Tag
 readAPTag = byte >>= \b ->
             if TC.isCS b then failure else
                 case TC.tagNumber b of
-                  0 -> readAPNullTag b
-                  1 -> readAPBoolTag b
-                  2 -> readAPUnsignedTag b
+                  0 -> readNullAPTag b
+                  1 -> readBoolAPTag b
+                  2 -> readUnsignedAPTag b
                   3 -> undefined
                   4 -> undefined
                   5 -> undefined
@@ -61,15 +77,15 @@ readAPTag = byte >>= \b ->
                   12-> undefined
 
 
-readAPNullTag :: Word8 -> Reader Tag
-readAPNullTag 0x00 = return $ Tag [0x00]
-readAPNullTag _ = failure
+readNullAPTag :: Word8 -> Reader Tag
+readNullAPTag 0x00 = return NullAP
+readNullAPTag _ = failure
 
-readAPBoolTag :: Word8 -> Reader Tag
-readAPBoolTag 0x10 = return $ Tag [0x10]
-readAPBoolTag 0x11 = return $ Tag [0x11]
-readAPBoolTag _ = failure
+readBoolAPTag :: Word8 -> Reader Tag
+readBoolAPTag 0x10 = return $ BoolAP False
+readBoolAPTag 0x11 = return $ BoolAP True
+readBoolAPTag _ = failure
 
-readAPUnsignedTag :: Word8 -> Reader Tag
-readAPUnsignedTag 0x21 = return $ Tag [0x21]
-readAPUnsignedTag _ = failure
+readUnsignedAPTag :: Word8 -> Reader Tag
+readUnsignedAPTag 0x21 = return $ UnsignedAP 1
+readUnsignedAPTag _ = failure

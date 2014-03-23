@@ -54,7 +54,7 @@ library
   -- exposed-modules:     BACReader, BACWriter
 
   -- Modules included in this library but not exported.
-  other-modules:       BACnet.Tag.Core
+  other-modules:       BACnet.Tag.Core, BACnet.Reader
 
   -- LANGUAGE extensions used by modules in this package.
   -- other-extensions:
