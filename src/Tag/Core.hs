@@ -7,8 +7,10 @@ module Tag.Core (
   isClose,
   closeType,
   isExtendedLength,
+  tagNumber,
   ) where
 
+import Control.Exception
 import Data.Word
 import Data.Bits
 
@@ -55,3 +57,13 @@ isClose = clvtMatches 0x0F
 -- | 'True' if 'lvt' == 'extendedLength'
 isExtendedLength :: Word8 -> Bool
 isExtendedLength = (== 0x05) . lvt
+
+
+-- | Returns the tag number valud encoded into an initial octet.
+--   As one would expect it can't return the actual tag number in the
+--   case of extended tag numbers since it is only given the initial octet
+--   as input.
+tagNumber :: Word8 -> Word8
+tagNumber b | isCS b = tNum
+            | otherwise = assert (tNum < 13) tNum
+  where tNum = (0x0F .&.) $ shiftR b 4
