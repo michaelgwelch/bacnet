@@ -1,4 +1,4 @@
-module Tag.Core (
+module BACnet.Tag.Core (
   isAP,
   isCS,
   lvt,

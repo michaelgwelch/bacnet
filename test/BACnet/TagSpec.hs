@@ -1,6 +1,6 @@
-module TagSpec where
+module BACnet.TagSpec where
 
-import Tag
+import BACnet.Tag
 import Test.QuickCheck
 import Test.Hspec
 

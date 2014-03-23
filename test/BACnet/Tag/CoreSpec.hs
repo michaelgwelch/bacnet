@@ -1,10 +1,10 @@
-module Tag.CoreSpec where
+module BACnet.Tag.CoreSpec where
 
 import Control.Exception
 import Test.Hspec
 import Test.QuickCheck hiding ((.&.))
 import Data.Bits
-import Tag.Core
+import BACnet.Tag.Core
 
 anyAssertionFailed :: Selector AssertionFailed
 anyAssertionFailed = const True

@@ -1,4 +1,4 @@
-module Tag
+module BACnet.Tag
   (
   readTag,
   readAPTag,
@@ -11,7 +11,8 @@ module Tag
 
 import Control.Exception (assert)
 import Data.Word
-import qualified Tag.Core as TC
+import qualified BACnet.Tag.Core as TC
+import BACnet.Reader.Core
 data Tag = Tag [Word8] deriving (Show, Eq)
 
 apNullTag :: Tag
@@ -30,25 +31,24 @@ apUnsignedTag w | w <= fromIntegral (maxBound :: Word8) = Tag [0x21]
                 | w <= fromIntegral (maxBound :: Word32) = Tag [0x24]
                 | otherwise = undefined
 
-newtype Reader a = R {runReader :: [Word8] -> Maybe (a, [Word8])}
-
+failure :: Reader a
+failure = fail ""
 
 readTag :: Reader Tag
-readTag = R (\bs -> case bs of
-                    [] -> Nothing
-                    (x:xs) -> if TC.isAP x then runReader readAPTag bs
-                                        else Nothing)
+readTag = byte >>= \b ->
+          if TC.isAP b then readAPTag else failure
 
 assertNotEmptyAndAP :: [Word8] -> Maybe(Tag, [Word8]) -> Maybe(Tag, [Word8])
 assertNotEmptyAndAP [] _ = Nothing
 assertNotEmptyAndAP (b:bs) result = if (TC.isAP b) then result else Nothing
 
 readAPTag :: Reader Tag
-readAPTag = R (\bs -> assertNotEmptyAndAP bs $
-                case TC.tagNumber $ head bs of
-                  0 -> readAPNullTag bs
-                  1 -> readAPBoolTag bs
-                  2 -> readAPUnsignedTag bs
+readAPTag = byte >>= \b ->
+            if TC.isCS b then failure else
+                case TC.tagNumber b of
+                  0 -> readAPNullTag b
+                  1 -> readAPBoolTag b
+                  2 -> readAPUnsignedTag b
                   3 -> undefined
                   4 -> undefined
                   5 -> undefined
@@ -59,18 +59,17 @@ readAPTag = R (\bs -> assertNotEmptyAndAP bs $
                   10-> undefined
                   11-> undefined
                   12-> undefined
-            )
 
-type ReaderTag' = [Word8] -> Maybe(Tag, [Word8])
 
-readAPNullTag :: ReaderTag'
-readAPNullTag (0x00:bs) = Just(apNullTag, bs)
-readAPNullTag _ = Nothing
+readAPNullTag :: Word8 -> Reader Tag
+readAPNullTag 0x00 = return $ Tag [0x00]
+readAPNullTag _ = failure
 
-readAPBoolTag :: ReaderTag'
-readAPBoolTag (0x10:bs) = Just(apFalseTag, bs)
-readAPBoolTag (0x11:bs) = Just(apTrueTag, bs)
-readAPBoolTag _ = Nothing
+readAPBoolTag :: Word8 -> Reader Tag
+readAPBoolTag 0x10 = return $ Tag [0x10]
+readAPBoolTag 0x11 = return $ Tag [0x11]
+readAPBoolTag _ = failure
 
-readAPUnsignedTag :: ReaderTag'
-readAPUnsignedTag (0x21:bs) = Just(Tag [0x21], bs)
+readAPUnsignedTag :: Word8 -> Reader Tag
+readAPUnsignedTag 0x21 = return $ Tag [0x21]
+readAPUnsignedTag _ = failure
