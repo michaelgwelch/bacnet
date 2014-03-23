@@ -8,6 +8,8 @@ module Tag.Core (
   closeType,
   isExtendedLength,
   tagNumber,
+  Word4,
+  Word3
   ) where
 
 import Control.Exception
@@ -67,3 +69,46 @@ tagNumber :: Word8 -> Word8
 tagNumber b | isCS b = tNum
             | otherwise = assert (tNum < 13) tNum
   where tNum = (0x0F .&.) $ shiftR b 4
+
+
+class SubByte a where
+  toWord8 :: a -> Word8
+  fromWord8 :: Word8 -> a
+
+newtype Word4 = Word4 Word8 deriving (Eq, Show, Ord)
+
+instance SubByte Word4 where
+  fromWord8 = Word4 . (0x0F .&.)
+  toWord8 (Word4 w8) = w8
+
+instance Num Word4 where
+  (Word4 a) + (Word4 b) = fromWord8 (a + b)
+  (Word4 a) - (Word4 b) = fromWord8 (a - b)
+  (Word4 a) * (Word4 b) = fromWord8 (a * b)
+  abs w = w
+  signum 0 = 0
+  signum _ = 1
+  fromInteger = fromWord8 . fromInteger
+
+instance Bounded Word4 where
+  minBound = 0
+  maxBound = 15
+
+newtype Word3 = Word3 Word8 deriving (Eq, Show, Ord)
+
+instance SubByte Word3 where
+  fromWord8 = Word3 . (0x07 .&.)
+  toWord8 (Word3 w8) = w8
+
+instance Num Word3 where
+  (Word3 a) + (Word3 b) = fromWord8 (a + b)
+  (Word3 a) - (Word3 b) = fromWord8 (a - b)
+  (Word3 a) * (Word3 b) = fromWord8 (a * b)
+  abs w = w
+  signum 0 = 0
+  signum _ = 1
+  fromInteger = fromWord8 . fromInteger
+
+instance Bounded Word3 where
+  minBound = 0
+  maxBound = 7
