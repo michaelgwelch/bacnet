@@ -43,8 +43,9 @@ readUnsignedAP = fmap fromIntegral readUnsignedAP'
 
 foldsbytes :: [Word8] -> Int
 foldsbytes [] = 0
-foldsbytes (sb:sbs) = let (val, len) = foldl (\(accv,accl) w -> (accv * 256 + fromIntegral w, accl+1)) (0,0) sbs in
-                      fromIntegral (fromIntegral sb :: Int8) * 256 ^ len + val
+foldsbytes (sb:sbs) =
+  let (val, len) =foldl (\(accv,accl) w -> (accv * 256 + fromIntegral w, accl+1)) (0,0) sbs
+  in fromIntegral (fromIntegral sb :: Int8) * 256 ^ len + val
 
 readSignedAP' :: Reader Int
 readSignedAP' = readSignedAPTag >>= \(SignedAP len) ->
