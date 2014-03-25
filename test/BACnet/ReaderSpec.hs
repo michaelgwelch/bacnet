@@ -10,7 +10,7 @@ import Data.Word
 spec :: Spec
 spec = do
   describe "readNullAP" $
-    it "reads [0x00] and returns Just((), [])" $ do
+    it "reads [0x00] and returns Just((), [])" $
       runReader readNullAP [0x00] `shouldBe` Just((),[])
 
   describe "readBoolAP" $
@@ -53,13 +53,13 @@ spec = do
     it "reads [0x31, 0xFE] and returns Just(-2, [])" $
       runReader readSignedAP [0x31, 0xFE] `shouldBe` Just(-2, [])
 
-  describe "readFloatAP" $ do
+  describe "readFloatAP" $
     it "reads [0x44, 0x00, 0x00, 0x00, 0x01] and returns Just(1.4e-45, [])" $
       runReader readRealAP [0x44, 0x00, 0x00, 0x00, 0x01] `shouldBe`
         Just(1.4e-45, [])
 
 
-  describe "readOctetStringAP" $ do
+  describe "readOctetStringAP" $
     it ("reads [0x65, 0x08, 0x01, 0x02, 0xa0, 0xb0, 0xc0, 0xd0, 0xe0, 0xff, 0xee] and " ++
        "returns Just([0x01, 0x02, 0xa0, 0xb0, 0xc0, 0xd0, 0xe0, 0xf0], [0xee])") $
        runReader readOctetStringAP [0x65, 0x08, 0x01, 0x02, 0xa0, 0xb0, 0xc0, 0xd0, 0xe0, 0xff, 0xee]

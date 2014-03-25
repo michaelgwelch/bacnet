@@ -16,6 +16,7 @@ module BACnet.Tag
   Tag(..)
   ) where
 
+import Control.Monad
 import Control.Applicative
 import Control.Exception (assert)
 import Data.Word
@@ -91,24 +92,35 @@ readBoolAPTag = (sat (== 0x10) >> return (BoolAP False)) <|>
                 (sat (== 0x11) >> return (BoolAP True))
 
 readUnsignedAPTag :: Reader Tag
-readUnsignedAPTag = sat (\b -> TC.tagNumber b == 2 && TC.isAP b) >>= \b ->
-                    lengthOfContent b >>= \len ->
-                    return $ UnsignedAP len
+readUnsignedAPTag = readAP 2 UnsignedAP
 
 readSignedAPTag :: Reader Tag
-readSignedAPTag = sat (\b -> TC.tagNumber b == 3 && TC.isAP b) >>= \b ->
-                    lengthOfContent b >>= \len ->
-                    return $ SignedAP len
+readSignedAPTag = readAP 3 SignedAP
 
 readRealAPTag :: Reader Tag
 readRealAPTag = sat (== 0x44) >> return RealAP
 
 readOctetStringAPTag :: Reader Tag
-readOctetStringAPTag = sat (\b -> TC.tagNumber b == 6 && TC.isAP b) >>= \b ->
-                        lengthOfContent b >>= \len ->
-                        return $ OctetStringAP len
+readOctetStringAPTag = readAP 6 OctetStringAP
+
+readAP :: Word8 -> (Word32 -> Tag) -> Reader Tag
+readAP tn co = sat (\b -> TC.tagNumber b == tn && TC.isAP b) >>=
+               (lengthOfContent >=> return . co)
 
 lengthOfContent :: Word8 -> Reader Word32
 lengthOfContent b | TC.lvt b < 5 = return . fromIntegral $ TC.lvt b
-                  | TC.lvt b == 5 = fmap fromIntegral byte
+                  | TC.lvt b == 5 = lengthOfContent'
                   | otherwise = failure
+
+-- | Reads the next byte. If it is < 254 it returns that value
+--   If it is 254, then reads the next 2 bytes as a Word32
+--   If it is 255, then reads the next 4 bytes as a Word32
+lengthOfContent' :: Reader Word32
+lengthOfContent' = byte >>= \b ->
+                    if b < 254 then
+                      return $ fromIntegral b
+                    else
+                      fmap foldbytes (bytes (if b == 254 then 2 else 4))
+
+foldbytes :: [Word8] -> Word32
+foldbytes = foldl (\acc w -> acc * 256 + fromIntegral w) 0

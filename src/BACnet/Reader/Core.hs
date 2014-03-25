@@ -17,7 +17,7 @@ success :: a -> Reader a
 success a = R (\inp -> Just(a, inp))
 
 failure :: Reader a
-failure = R (\inp -> Nothing)
+failure = R (const Nothing)
 
 bindReader :: Reader a -> (a -> Reader b) -> Reader b
 bindReader ra f =
