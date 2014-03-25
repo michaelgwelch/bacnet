@@ -7,10 +7,12 @@ module BACnet.Reader
     readUnsignedAP,
     readSignedAP,
     readRealAP,
+    readDoubleAP,
     readOctetStringAP
   ) where
 
 import Control.Applicative
+import Control.Monad
 import Data.Binary
 import Data.Binary.Get
 import Data.Binary.IEEE754
@@ -22,10 +24,10 @@ import Data.ByteString.Lazy hiding (foldl)
 
 
 readNullAP :: Reader ()
-readNullAP = pure (const ()) <*> readNullAPTag
+readNullAP = void readNullAPTag
 
 readBoolAP :: Reader Bool
-readBoolAP = pure (\(BoolAP val) -> val) <*> readBoolAPTag
+readBoolAP = readBoolAPTag >>= \(BoolAP val) -> return val
 
 foldbytes :: [Word8] -> Word
 foldbytes = foldl (\acc w -> acc * 256 + fromIntegral w) 0
@@ -57,6 +59,11 @@ readRealAP :: Reader Float
 readRealAP = readRealAPTag >>
              bytes 4 >>= \bs ->
              return $ runGet getFloat32be $ pack bs
+
+readDoubleAP :: Reader Double
+readDoubleAP = readDoubleAPTag >>
+               bytes 8 >>= \bs ->
+               return $ runGet getFloat64be $ pack bs
 
 readOctetStringAP :: Reader [Word8]
 readOctetStringAP = readOctetStringAPTag >>= \(OctetStringAP len) ->

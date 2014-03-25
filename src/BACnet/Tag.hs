@@ -12,6 +12,7 @@ module BACnet.Tag
   readUnsignedAPTag,
   readSignedAPTag,
   readRealAPTag,
+  readDoubleAPTag,
   readOctetStringAPTag,
   Tag(..)
   ) where
@@ -99,6 +100,9 @@ readSignedAPTag = readAP 3 SignedAP
 
 readRealAPTag :: Reader Tag
 readRealAPTag = sat (== 0x44) >> return RealAP
+
+readDoubleAPTag :: Reader Tag
+readDoubleAPTag = sat (== 0x55) >> sat (== 0x08) >> return DoubleAP
 
 readOctetStringAPTag :: Reader Tag
 readOctetStringAPTag = readAP 6 OctetStringAP
