@@ -4,13 +4,20 @@ module BACnet.Reader
     runReader,
     readNullAP,
     readBoolAP,
-    readUnsignedAP
+    readUnsignedAP,
+    readSignedAP,
+    readRealAP
   ) where
 
 import Control.Applicative
+import Data.Binary
+import Data.Binary.Get
+import Data.Binary.IEEE754
 import Data.Word
+import Data.Int
 import BACnet.Tag
 import BACnet.Reader.Core
+import Data.ByteString.Lazy hiding (foldl)
 
 
 readNullAP :: Reader ()
@@ -30,3 +37,22 @@ readUnsignedAP' = readUnsignedAPTag >>= \(UnsignedAP len) ->
 
 readUnsignedAP :: Reader Word32
 readUnsignedAP = fmap fromIntegral readUnsignedAP'
+
+foldsbytes :: [Word8] -> Int
+foldsbytes [] = 0
+foldsbytes (sb:sbs) = let (val, len) = foldl (\(accv,accl) w -> (accv * 256 + fromIntegral w, accl+1)) (0,0) sbs in
+                      fromIntegral (fromIntegral sb :: Int8) * 256 ^ len + val
+
+readSignedAP' :: Reader Int
+readSignedAP' = readSignedAPTag >>= \(SignedAP len) ->
+                bytes (fromIntegral len) >>= \bs ->
+                return $ foldsbytes bs
+
+readSignedAP :: Reader Int32
+readSignedAP = fmap fromIntegral readSignedAP'
+
+
+readRealAP :: Reader Float
+readRealAP = readRealAPTag >>
+             bytes 4 >>= \bs ->
+             return $ runGet getFloat32be $ pack bs

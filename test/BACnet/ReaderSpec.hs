@@ -38,3 +38,18 @@ spec = do
     it "reads [0x23, 0xFF, 0xFF, 0xFF] and returns Just(16646655, [])" $
       runReader readUnsignedAP [0x23, 0xFF, 0xFF, 0xFF] `shouldBe`
         Just(16777215, [])
+
+  describe "readSignedAP" $ do
+    it "reads [0x31, 0x00] and returns Just(0, [])" $
+      runReader readSignedAP [0x31, 0x00] `shouldBe` Just(0, [])
+
+    it "reads [0x31, 0xFF] and returns Just(-1, [])" $
+      runReader readSignedAP [0x31, 0xFF] `shouldBe` Just(-1, [])
+
+    it "reads [0x31, 0xFE] and returns Just(-2, [])" $
+      runReader readSignedAP [0x31, 0xFE] `shouldBe` Just(-2, [])
+
+  describe "readFloatAP" $ do
+    it "reads [0x44, 0x00, 0x00, 0x00, 0x01] and returns Just(1.4e-45, [])" $
+      runReader readRealAP [0x44, 0x00, 0x00, 0x00, 0x01] `shouldBe`
+        Just(1.4e-45, [])

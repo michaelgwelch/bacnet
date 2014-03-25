@@ -10,6 +10,8 @@ module BACnet.Tag
   readNullAPTag,
   readBoolAPTag,
   readUnsignedAPTag,
+  readSignedAPTag,
+  readRealAPTag,
   Tag(..)
   ) where
 
@@ -90,3 +92,10 @@ readBoolAPTag = (sat (== 0x10) >> return (BoolAP False)) <|>
 readUnsignedAPTag :: Reader Tag
 readUnsignedAPTag = pure (UnsignedAP . fromIntegral . TC.lvt) <*>
                     sat (\b -> TC.tagNumber b == 2 && TC.isAP b)
+
+readSignedAPTag :: Reader Tag
+readSignedAPTag = pure (SignedAP . fromIntegral . TC.lvt) <*>
+                  sat (\b -> TC.tagNumber b == 3 && TC.isAP b)
+
+readRealAPTag :: Reader Tag
+readRealAPTag = sat (== 0x44) >> return RealAP
