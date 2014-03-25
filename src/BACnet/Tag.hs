@@ -12,6 +12,7 @@ module BACnet.Tag
   readUnsignedAPTag,
   readSignedAPTag,
   readRealAPTag,
+  readOctetStringAPTag,
   Tag(..)
   ) where
 
@@ -90,12 +91,24 @@ readBoolAPTag = (sat (== 0x10) >> return (BoolAP False)) <|>
                 (sat (== 0x11) >> return (BoolAP True))
 
 readUnsignedAPTag :: Reader Tag
-readUnsignedAPTag = pure (UnsignedAP . fromIntegral . TC.lvt) <*>
-                    sat (\b -> TC.tagNumber b == 2 && TC.isAP b)
+readUnsignedAPTag = sat (\b -> TC.tagNumber b == 2 && TC.isAP b) >>= \b ->
+                    lengthOfContent b >>= \len ->
+                    return $ UnsignedAP len
 
 readSignedAPTag :: Reader Tag
-readSignedAPTag = pure (SignedAP . fromIntegral . TC.lvt) <*>
-                  sat (\b -> TC.tagNumber b == 3 && TC.isAP b)
+readSignedAPTag = sat (\b -> TC.tagNumber b == 3 && TC.isAP b) >>= \b ->
+                    lengthOfContent b >>= \len ->
+                    return $ SignedAP len
 
 readRealAPTag :: Reader Tag
 readRealAPTag = sat (== 0x44) >> return RealAP
+
+readOctetStringAPTag :: Reader Tag
+readOctetStringAPTag = sat (\b -> TC.tagNumber b == 6 && TC.isAP b) >>= \b ->
+                        lengthOfContent b >>= \len ->
+                        return $ OctetStringAP len
+
+lengthOfContent :: Word8 -> Reader Word32
+lengthOfContent b | TC.lvt b < 5 = return . fromIntegral $ TC.lvt b
+                  | TC.lvt b == 5 = fmap fromIntegral byte
+                  | otherwise = failure

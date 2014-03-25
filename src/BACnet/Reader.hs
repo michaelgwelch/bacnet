@@ -6,7 +6,8 @@ module BACnet.Reader
     readBoolAP,
     readUnsignedAP,
     readSignedAP,
-    readRealAP
+    readRealAP,
+    readOctetStringAP
   ) where
 
 import Control.Applicative
@@ -56,3 +57,7 @@ readRealAP :: Reader Float
 readRealAP = readRealAPTag >>
              bytes 4 >>= \bs ->
              return $ runGet getFloat32be $ pack bs
+
+readOctetStringAP :: Reader [Word8]
+readOctetStringAP = readOctetStringAPTag >>= \(OctetStringAP len) ->
+                    bytes (fromIntegral len)
