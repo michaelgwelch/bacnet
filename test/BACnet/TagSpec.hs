@@ -5,11 +5,13 @@ import Test.QuickCheck
 import Test.Hspec
 import BACnet.Reader
 
+-- TODO: Remove the readAPTag tests. Remove the function as well.
 spec :: Spec
 spec =
   describe "readAPTag" $ do
     it "returns Nothing for input that is empty" $
       runReader readAPTag [] `shouldBe` Nothing
+    it "should be rewritten" $ False `shouldBe`True
     it "returns Just(apNullTag, bs) on input (0x00 : bs)" $
       property (\bs -> runReader readAPTag (0x00 : bs) `shouldBe`
       Just(apNullTag, bs))
