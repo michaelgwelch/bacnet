@@ -2,7 +2,6 @@ module BACnet.Tag
   (
   readTag,
   readAPTag,
-  runReader,
   apNullTag,
   apTrueTag,
   apFalseTag,
@@ -14,7 +13,9 @@ module BACnet.Tag
   readRealAPTag,
   readDoubleAPTag,
   readOctetStringAPTag,
-  Tag(..)
+  Tag(..),
+  boolVal,
+  tagLength
   ) where
 
 import Control.Monad
@@ -130,3 +131,11 @@ lengthOfContent' = byte >>= \b ->
 
 foldbytes :: BS.ByteString -> Word32
 foldbytes = BS.foldl (\acc w -> acc * 256 + fromIntegral w) 0
+
+boolVal :: Tag -> Bool
+boolVal (BoolAP val) = val
+
+tagLength :: Tag -> Word32
+tagLength (UnsignedAP len) = len
+tagLength (SignedAP len) = len
+tagLength (OctetStringAP len) = len

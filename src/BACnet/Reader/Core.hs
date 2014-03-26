@@ -6,7 +6,8 @@ module BACnet.Reader.Core
   byte,
   bytes,
   sat,
-  runReader
+  runReader,
+  run
   ) where
 
 import qualified Data.ByteString.Lazy as BS
@@ -20,7 +21,15 @@ import Text.Parsec.Error
 import Text.Parsec.Pos
 import Numeric
 
+-- | Defines the a new type that can be used to read Binary BACnet encoded
+--   values
 newtype Reader a = R { getParser :: Parsec BS.ByteString () a }
+
+right :: Either a b -> b
+right (Right x) = x
+
+run :: Reader a -> [Word8] -> a
+run r ws = right $ runR r (BS.pack ws)
 
 runR :: Reader a -> BS.ByteString -> Either ParseError a
 runR (R p) = parse p ""

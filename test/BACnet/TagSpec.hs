@@ -3,6 +3,7 @@ module BACnet.TagSpec where
 import BACnet.Tag
 import Test.QuickCheck
 import Test.Hspec
+import BACnet.Reader
 
 spec :: Spec
 spec =

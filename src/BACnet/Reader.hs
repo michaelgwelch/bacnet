@@ -3,6 +3,7 @@ module BACnet.Reader
   (
     Reader,
     runReader,
+    run,
     readNullAP,
     readBoolAP,
     readUnsignedAP,
@@ -58,14 +59,6 @@ readOctetStringAP :: Reader [Word8]
 readOctetStringAP = readOctetStringAPTag >>=
                     (content id >=>
                      return . BS.unpack)
-
-boolVal :: Tag -> Bool
-boolVal (BoolAP val) = val
-
-tagLength :: Tag -> Word32
-tagLength (UnsignedAP len) = len
-tagLength (SignedAP len) = len
-tagLength (OctetStringAP len) = len
 
 foldbytes :: BS.ByteString -> Word
 foldbytes = BS.foldl (\acc w -> acc * 256 + fromIntegral w) 0
