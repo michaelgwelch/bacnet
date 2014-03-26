@@ -70,6 +70,9 @@ tagLength (OctetStringAP len) = len
 foldbytes :: BS.ByteString -> Word
 foldbytes = BS.foldl (\acc w -> acc * 256 + fromIntegral w) 0
 
+-- | The reader @content f t@ reads a 'BS.ByteString' of length indicated by the
+--   length specified in the 'Tag', @t@, and returns the value obtained by applying
+--   @f@ to that ByteString. 
 content :: (BS.ByteString -> a) -> Tag -> Reader a
 content f t = f <$> bytes (fromIntegral $ tagLength t)
 
