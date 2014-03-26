@@ -21,8 +21,7 @@ import Text.Parsec.Error
 import Text.Parsec.Pos
 import Numeric
 
--- | Defines the a new type that can be used to read Binary BACnet encoded
---   values
+-- | Reader is a parser of BACnet encoded binary data
 newtype Reader a = R { getParser :: Parsec BS.ByteString () a }
 
 right :: Either a b -> b
@@ -50,6 +49,8 @@ updatePosWord8  :: SourcePos -> Word8 -> SourcePos
 updatePosWord8 pos b
     = newPos (sourceName pos) (sourceLine pos) (sourceColumn pos + 1)
 
+-- | The reader @sat f@ succeeds for any byte for which the supplied function
+--   @f@ returns 'True'. Returns the byte that is actually read.
 sat :: (Word8 -> Bool) -> Reader Word8
 sat p =
   R (tokenPrim showByte nextPos textByte)
@@ -58,12 +59,15 @@ sat p =
     nextPos p b _ = updatePosWord8 p b
     textByte b = if p b then Just b else Nothing
 
+-- | This reader succeeds for any byte that is read. Returns the read byte.
 byte :: Reader Word8
 byte = sat (const True)
 
+-- | @peek@ reads a byte and returns it without consuming any input
 peek :: Reader Word8
 peek = R . lookAhead $ getParser byte
 
+-- | @bytes n@ reads and consumes the next n bytes.
 bytes :: Word8 -> Reader BS.ByteString
 bytes 0 = return BS.empty
 bytes n = BS.cons <$> byte <*> bytes (n-1)
