@@ -23,6 +23,8 @@ import Control.Exception (assert)
 import Data.Word
 import qualified BACnet.Tag.Core as TC
 import BACnet.Reader.Core
+import qualified Data.ByteString.Lazy as BS
+
 data Tag =
           NullAP
         | BoolAP Bool
@@ -126,5 +128,5 @@ lengthOfContent' = byte >>= \b ->
                     else
                       fmap foldbytes (bytes (if b == 254 then 2 else 4))
 
-foldbytes :: [Word8] -> Word32
-foldbytes = foldl (\acc w -> acc * 256 + fromIntegral w) 0
+foldbytes :: BS.ByteString -> Word32
+foldbytes = BS.foldl (\acc w -> acc * 256 + fromIntegral w) 0

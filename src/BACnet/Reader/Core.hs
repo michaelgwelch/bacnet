@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses #-}
 module BACnet.Reader.Core
   (
   Reader,
@@ -8,66 +9,76 @@ module BACnet.Reader.Core
   runReader
   ) where
 
+import qualified Data.ByteString.Lazy as BS
+import Data.Functor.Identity
 import Data.Word
-import Control.Applicative
+import Control.Applicative hiding ((<|>))
+import qualified Control.Applicative as Ap
+import Control.Monad
+import Text.Parsec.Prim
+import Text.Parsec.Error
+import Text.Parsec.Pos
+import Numeric
 
-newtype Reader a = R {runReader :: [Word8] -> Maybe (a, [Word8])}
+newtype Reader a = R { getParser :: Parsec BS.ByteString () a }
 
-success :: a -> Reader a
-success a = R (\inp -> Just(a, inp))
+runR :: Reader a -> BS.ByteString -> Either ParseError a
+runR (R p) = parse p ""
 
-failure :: Reader a
-failure = R (const Nothing)
+runReader :: Reader a -> [Word8] -> Maybe(a, [Word8])
+runReader (R p) bs =
+  let parser = (p >>= \val ->
+                getParserState >>= \s ->
+                return (val, BS.unpack $ stateInput s)) in
+  case parse parser "" (BS.pack bs) of
+                      (Left _) -> Nothing
+                      (Right x) -> Just x
 
-bindReader :: Reader a -> (a -> Reader b) -> Reader b
-bindReader ra f =
-  R (\inp -> case runReader ra inp of
-              Nothing -> Nothing
-              Just(val, out) -> runReader (f val) out)
+instance (Monad m) => Stream BS.ByteString m Word8 where
+  uncons = return . BS.uncons
 
-peek :: Reader Word8
-peek = R (\inp -> case inp of
-                    [] -> Nothing
-                    (b:bs) -> Just(b, inp))
-
-byte :: Reader Word8
-byte = R (\inp -> case inp of
-                    [] -> Nothing
-                    (b:bs) -> Just(b, bs))
-
-(+++) :: Reader a -> Reader a -> Reader a
-r1 +++ r2 = R (\inp -> case runReader r1 inp of
-                          Nothing -> runReader r2 inp
-                          result -> result)
-
-bytes :: Word8 -> Reader [Word8]
-bytes 0 = return []
-bytes n = pure (:) <*> byte <*> bytes (n-1)
+updatePosWord8  :: SourcePos -> Word8 -> SourcePos
+updatePosWord8 pos b
+    = newPos (sourceName pos) (sourceLine pos) (sourceColumn pos + 1)
 
 sat :: (Word8 -> Bool) -> Reader Word8
-sat pred = byte >>= \b -> if pred b then return b else failure
+sat p =
+  R (tokenPrim showByte nextPos textByte)
+  where
+    showByte = ("0x"++) . flip showHex ""
+    nextPos p b _ = updatePosWord8 p b
+    textByte b = if p b then Just b else Nothing
+
+byte :: Reader Word8
+byte = sat (const True)
+
+peek :: Reader Word8
+peek = R . lookAhead $ getParser byte
+
+bytes :: Word8 -> Reader BS.ByteString
+bytes 0 = return BS.empty
+bytes n = BS.cons <$> byte <*> bytes (n-1)
+
+readerBind :: Reader a -> (a -> Reader b) -> Reader b
+readerBind (R pa) f = R (pa >>= \val ->
+                         let (R pb) = f val in pb)
 
 instance Monad Reader where
-  (>>=) = bindReader
-  return = success
-  fail _ = failure
-
-rmap :: (a -> b) -> Reader a -> Reader b
-rmap f ra = ra >>= \a ->
-            return $ f a
+  fail _ = R $ parserFail ""
+  (>>=) = readerBind
+  return v = R (parserReturn v)
 
 instance Functor Reader where
-  fmap = rmap
-
-readerSeq :: Reader (a -> b) -> Reader a -> Reader b
-readerSeq rf ra = rf >>= \f ->
-                  ra >>= \a ->
-                  return $ f a
+  fmap = liftM
 
 instance Applicative Reader where
-  pure = success
-  (<*>) = readerSeq
+  pure = return
+  (<*>) = ap
 
 instance Alternative Reader where
-  empty = failure
-  (<|>) = (+++)
+  empty = mzero
+  (<|>) = mplus
+
+instance MonadPlus Reader where
+  mzero = fail ""
+  (R p1) `mplus` (R p2) = R (p1 `mplus` p2)
