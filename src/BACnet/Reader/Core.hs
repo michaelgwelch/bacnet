@@ -1,4 +1,6 @@
 {-# LANGUAGE FlexibleInstances, MultiParamTypeClasses #-}
+-- | Provides the primitives necessary for building readers of
+--   'BS.ByteString' or ['Word8'] data
 module BACnet.Reader.Core
   (
   Reader,
@@ -24,9 +26,14 @@ import Numeric
 -- | Reader is a parser of BACnet encoded binary data
 newtype Reader a = R { getParser :: Parsec BS.ByteString () a }
 
-right :: Either a b -> b
+right :: Either ParseError b -> b
 right (Right x) = x
+right (Left err) = error $ show err
 
+-- | Runs the specified reader on the given input. If successful
+--   it returns the value that was read. If unsuccessful, an error
+--   is thrown giving the location of the error and the unexpected 'Word8'
+--   value
 run :: Reader a -> [Word8] -> a
 run r ws = right $ runR r (BS.pack ws)
 

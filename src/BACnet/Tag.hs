@@ -1,7 +1,5 @@
 module BACnet.Tag
   (
-  readTag,
-  readAPTag,
   apNullTag,
   apTrueTag,
   apFalseTag,
@@ -28,28 +26,46 @@ import qualified Data.ByteString.Lazy as BS
 
 data Tag =
           NullAP
+        | NullCS Word8
         | BoolAP Bool
+        | BoolCS Word8
         | UnsignedAP Word32
+        | UnsignedCS Word8 Word32
         | SignedAP Word32
+        | SignedCS Word8 Word32
         | RealAP
+        | RealCS Word8
         | DoubleAP
+        | DoubleCS Word8
         | OctetStringAP Word32 -- length
+        | OctetStringCS Word8 Word32
         | CharacterStringAP Word8 Word32 -- encoding, length
         | BitStringAP Word32 -- length
+        | BitStringCS Word8 Word32
         | EnumeratedAP Word32 -- length
+        | EnumeratedCS Word8 Word32
         | DateAP
+        | DateCS Word8
         | TimeAP
+        | TimeCS Word8
         | ObjectIdentifierAP
+        | ObjectIdentifierCS Word8
   deriving (Show, Eq)
 
 apNullTag :: Tag
 apNullTag = NullAP
+
+csNullTag :: Word8 -> Tag
+csNullTag = NullCS
 
 apTrueTag :: Tag
 apTrueTag = BoolAP True
 
 apFalseTag :: Tag
 apFalseTag = BoolAP False
+
+csBoolTag :: Word8 -> Tag
+csBoolTag = BoolCS
 
 apUnsignedTag :: Word -> Tag
 apUnsignedTag w | w <= fromIntegral (maxBound :: Word8) = UnsignedAP 1
@@ -61,58 +77,94 @@ apUnsignedTag w | w <= fromIntegral (maxBound :: Word8) = UnsignedAP 1
 failure :: Reader a
 failure = fail ""
 
-readTag :: Reader Tag
-readTag = byte >>= \b ->
-          if TC.isAP b then readAPTag else failure
-
-assertNotEmptyAndAP :: [Word8] -> Maybe(Tag, [Word8]) -> Maybe(Tag, [Word8])
-assertNotEmptyAndAP [] _ = Nothing
-assertNotEmptyAndAP (b:bs) result = if TC.isAP b then result else Nothing
-
-readAPTag :: Reader Tag
-readAPTag = peek >>= \b ->
-            if TC.isCS b then failure else
-                case TC.tagNumber b of
-                  0 -> readNullAPTag
-                  1 -> readBoolAPTag
-                  2 -> readUnsignedAPTag
-                  3 -> undefined
-                  4 -> undefined
-                  5 -> undefined
-                  6 -> undefined
-                  7 -> undefined
-                  8 -> undefined
-                  9 -> undefined
-                  10-> undefined
-                  11-> undefined
-                  12-> undefined
-
+const' = const . const
 
 readNullAPTag :: Reader Tag
 readNullAPTag = sat (== 0x00) >> return NullAP
+
+readNullCSTag :: Word8 -> Reader Tag
+readNullCSTag t = readCS t (==0) (\_ _ -> NullCS t)
 
 readBoolAPTag :: Reader Tag
 readBoolAPTag = (sat (== 0x10) >> return (BoolAP False)) <|>
                 (sat (== 0x11) >> return (BoolAP True))
 
+readBoolCSTag :: Word8 -> Reader Tag
+readBoolCSTag t = readCS t (==1) (\_ _ -> BoolCS t)
+
 readUnsignedAPTag :: Reader Tag
 readUnsignedAPTag = readAP 2 UnsignedAP
+
+readUnsignedCSTag :: Word8 -> Reader Tag
+readUnsignedCSTag t = readCS t (/=0) UnsignedCS
 
 readSignedAPTag :: Reader Tag
 readSignedAPTag = readAP 3 SignedAP
 
+readSignedCSTag :: Word8 -> Reader Tag
+readSignedCSTag t = readCS t (/=0) SignedCS
+
 readRealAPTag :: Reader Tag
 readRealAPTag = sat (== 0x44) >> return RealAP
+
+readRealCSTag :: Word8 -> Reader Tag
+readRealCSTag t = readCS t (==4) (\_ _ -> RealCS t)
 
 readDoubleAPTag :: Reader Tag
 readDoubleAPTag = sat (== 0x55) >> sat (== 0x08) >> return DoubleAP
 
+readDoubleCSTag :: Word8 -> Reader Tag
+readDoubleCSTag t = readCS t (==8) (\_ _ -> DoubleCS t)
+
 readOctetStringAPTag :: Reader Tag
 readOctetStringAPTag = readAP 6 OctetStringAP
+
+readOctetStringCSTag :: Word8 -> Reader Tag
+readOctetStringCSTag t = readCS t (const True) OctetStringCS
+
+readBitStringAPTag :: Reader Tag
+readBitStringAPTag = readAP 8 BitStringAP
+
+readBitStringCSTag :: Word8 -> Reader Tag
+readBitStringCSTag t = readCS t (const True) BitStringCS
+
+readEnumeratedAPTag :: Reader Tag
+readEnumeratedAPTag = readAP 9 EnumeratedAP
+
+readDateAPTag :: Reader Tag
+readDateAPTag = sat (== 0xa4) >> return DateAP
+
+readTimeAPTag :: Reader Tag
+readTimeAPTag = sat (== 0xb4) >> return TimeAP
+
+readObjectIdentifierAPTag :: Reader Tag
+readObjectIdentifierAPTag = sat (== 0xc4) >> return ObjectIdentifierAP
 
 readAP :: Word8 -> (Word32 -> Tag) -> Reader Tag
 readAP tn co = sat (\b -> TC.tagNumber b == tn && TC.isAP b) >>=
                (lengthOfContent >=> return . co)
+
+-- | The function @cont b@ succeeds (continues) if b is true, otherwise it fails.
+--   The function consumes no input.
+cont :: Bool -> Reader ()
+cont False = failure
+cont True = return ()
+
+
+ifM :: Bool -> Reader a -> Reader a -> Reader a
+ifM True ra _ = ra
+ifM False _ rb = rb
+
+-- | @readCS tn pred co@ succeeds if tn matches the tag number that is read,
+--   and the tag is CS encoded, and the length checking predicate returns true.
+--   It constructs a Tag by using the given constructor @co@.
+readCS :: Word8 -> (Word32 -> Bool) -> (Word8 -> Word32 -> Tag) -> Reader Tag
+readCS tn p co = sat TC.isCS >>= \b ->
+               ifM (TC.tagNumber b == 0x0F) (void $ sat (==tn)) (cont (tn == TC.tagNumber b)) >>
+               lengthOfContent b >>= \len ->
+               cont (p len) >>
+               (return $ co tn len)
+
 
 lengthOfContent :: Word8 -> Reader Word32
 lengthOfContent b | TC.lvt b < 5 = return . fromIntegral $ TC.lvt b
