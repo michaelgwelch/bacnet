@@ -5,20 +5,22 @@ module BACnet.Tag
   apFalseTag,
   apUnsignedTag,
   readNullAPTag,
+  readNullCSTag,
   readBoolAPTag,
   readUnsignedAPTag,
   readSignedAPTag,
   readRealAPTag,
   readDoubleAPTag,
   readOctetStringAPTag,
+  readBitStringAPTag,
   Tag(..),
   boolVal,
-  tagLength
+  tagLength,
+  const'
   ) where
 
 import Control.Monad
 import Control.Applicative
-import Control.Exception (assert)
 import Data.Word
 import qualified BACnet.Tag.Core as TC
 import BACnet.Reader.Core
@@ -77,20 +79,21 @@ apUnsignedTag w | w <= fromIntegral (maxBound :: Word8) = UnsignedAP 1
 failure :: Reader a
 failure = fail ""
 
+const' :: a -> b -> c -> a
 const' = const . const
 
 readNullAPTag :: Reader Tag
 readNullAPTag = sat (== 0x00) >> return NullAP
 
 readNullCSTag :: Word8 -> Reader Tag
-readNullCSTag t = readCS t (==0) (\_ _ -> NullCS t)
+readNullCSTag t = readCS t (==0) (const' $ NullCS t)
 
 readBoolAPTag :: Reader Tag
 readBoolAPTag = (sat (== 0x10) >> return (BoolAP False)) <|>
                 (sat (== 0x11) >> return (BoolAP True))
 
 readBoolCSTag :: Word8 -> Reader Tag
-readBoolCSTag t = readCS t (==1) (\_ _ -> BoolCS t)
+readBoolCSTag t = readCS t (==1) (const' $ BoolCS t)
 
 readUnsignedAPTag :: Reader Tag
 readUnsignedAPTag = readAP 2 UnsignedAP
@@ -108,13 +111,13 @@ readRealAPTag :: Reader Tag
 readRealAPTag = sat (== 0x44) >> return RealAP
 
 readRealCSTag :: Word8 -> Reader Tag
-readRealCSTag t = readCS t (==4) (\_ _ -> RealCS t)
+readRealCSTag t = readCS t (==4) (const' $ RealCS t)
 
 readDoubleAPTag :: Reader Tag
 readDoubleAPTag = sat (== 0x55) >> sat (== 0x08) >> return DoubleAP
 
 readDoubleCSTag :: Word8 -> Reader Tag
-readDoubleCSTag t = readCS t (==8) (\_ _ -> DoubleCS t)
+readDoubleCSTag t = readCS t (==8) (const' $ DoubleCS t)
 
 readOctetStringAPTag :: Reader Tag
 readOctetStringAPTag = readAP 6 OctetStringAP
@@ -144,27 +147,21 @@ readAP :: Word8 -> (Word32 -> Tag) -> Reader Tag
 readAP tn co = sat (\b -> TC.tagNumber b == tn && TC.isAP b) >>=
                (lengthOfContent >=> return . co)
 
--- | The function @cont b@ succeeds (continues) if b is true, otherwise it fails.
---   The function consumes no input.
-cont :: Bool -> Reader ()
-cont False = failure
-cont True = return ()
-
-
-ifM :: Bool -> Reader a -> Reader a -> Reader a
-ifM True ra _ = ra
-ifM False _ rb = rb
-
 -- | @readCS tn pred co@ succeeds if tn matches the tag number that is read,
 --   and the tag is CS encoded, and the length checking predicate returns true.
 --   It constructs a Tag by using the given constructor @co@.
 readCS :: Word8 -> (Word32 -> Bool) -> (Word8 -> Word32 -> Tag) -> Reader Tag
-readCS tn p co = sat TC.isCS >>= \b ->
-               ifM (TC.tagNumber b == 0x0F) (void $ sat (==tn)) (cont (tn == TC.tagNumber b)) >>
-               lengthOfContent b >>= \len ->
-               cont (p len) >>
-               (return $ co tn len)
-
+readCS tn p co
+  = do
+      b <- sat TC.isCS
+      guardTagNumber (TC.tagNumber b) tn
+      len <- lengthOfContent b
+      guard (p len)
+      return $ co tn len
+    where
+      guardTagNumber expected actual
+        = when (actual == 0x0F) (void $ sat(==expected)) <|>
+            (guard $ (expected == actual))
 
 lengthOfContent :: Word8 -> Reader Word32
 lengthOfContent b | TC.lvt b < 5 = return . fromIntegral $ TC.lvt b
@@ -176,10 +173,9 @@ lengthOfContent b | TC.lvt b < 5 = return . fromIntegral $ TC.lvt b
 --   If it is 255, then reads the next 4 bytes as a Word32
 lengthOfContent' :: Reader Word32
 lengthOfContent' = byte >>= \b ->
-                    if b < 254 then
-                      return $ fromIntegral b
-                    else
-                      fmap foldbytes (bytes (if b == 254 then 2 else 4))
+                    if b < 254
+                      then return $ fromIntegral b
+                      else fmap foldbytes (bytes (if b == 254 then 2 else 4))
 
 foldbytes :: BS.ByteString -> Word32
 foldbytes = BS.foldl (\acc w -> acc * 256 + fromIntegral w) 0

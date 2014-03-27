@@ -1,5 +1,15 @@
-{-# LANGUAGE TupleSections #-}
-module BACnet.Writer.Core where
+{-# LANGUAGE TupleSections, RankNTypes #-}
+module BACnet.Writer.Core
+  (
+    Writer,
+    runW,
+    nullAPTag,
+    boolAPTag,
+    unsignedAPTag,
+    empty,
+    append,
+    (<>)
+  ) where
 
 import qualified Data.ByteString.Lazy as BS
 import Data.ByteString.Lazy.Builder
@@ -12,10 +22,14 @@ import qualified Control.Applicative as A
 import qualified Control.Monad as M
 import BACnet.Writer.ByteString
 
-newtype Writer a = W { unWriter :: (a, Builder) }
+-- | A writer - this type actually provides no value that isn't already
+--   provided directly by builder. The tag functions below should go in Tag.hs
+--   So this whole file can be deleted.
+newtype Writer = W { unWriter :: Builder }
 
-runW :: Writer a -> [Word8]
-runW = BS.unpack . toLazyByteString . snd . unWriter
+-- | Runs a writer and returns the result as an array of bytes.
+runW :: Writer -> [Word8]
+runW = BS.unpack . toLazyByteString . unWriter
 
 
 null :: Builder
@@ -33,29 +47,25 @@ unfoldWord n bs =
   in (len+1, bs')
 
 -- | Writes a tag appropriate for an application encoded null value
-nullAPTag :: Writer ()
-nullAPTag = W ((), null)
+nullAPTag :: Writer
+nullAPTag = W null
 
-boolAPTag :: Bool -> Writer Bool
-boolAPTag b = W (b, word8 (if b then 0x11 else 0x10))
+boolAPTag :: Bool -> Writer
+boolAPTag b = W (word8 (if b then 0x11 else 0x10))
 
-unsignedAPTag :: Word32 -> Writer Word32
-unsignedAPTag 0 = W (0, word16BE 0x2000)
+unsignedAPTag :: Word32 -> Writer
+unsignedAPTag 0 = W (word16BE 0x2000)
 unsignedAPTag v =
   let initialOctet = 0x20 + len
       (len, bs)    = unfoldWord (fromIntegral v) []
-  in W (v, lazyByteString $ BS.pack $ (fromIntegral initialOctet) : bs)
+  in W (lazyByteString $ BS.pack $ (fromIntegral initialOctet) : bs)
 
-instance M.Monad Writer where
-  return v = W (v, mempty)
-  wa >>= f = let W (x, b) = wa
-                 W (y, b') = f x
-             in  W (y, b `mappend` b')
+empty :: Writer
+empty = W (lazyByteString BS.empty)
 
-instance Functor Writer where
-  fmap f wa = let W (a, b) = wa
-              in  W (f a, b)
+append :: Writer -> Writer -> Writer
+append (W b1) (W b2) = W (b1 <> b2)
 
-instance A.Applicative Writer where
-  pure = return
-  (<*>) = M.ap
+instance Monoid Writer where
+  mempty = empty
+  mappend = append

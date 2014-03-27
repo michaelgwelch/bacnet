@@ -29,6 +29,9 @@ import qualified Data.ByteString.Lazy as BS
 readNullAP :: Reader ()
 readNullAP = void readNullAPTag
 
+readNullCS :: Word8 -> Reader ()
+readNullCS = void . readNullCSTag
+
 -- | Reads an application encoded boolean value
 readBoolAP :: Reader Bool
 readBoolAP = boolVal <$> readBoolAPTag
@@ -59,6 +62,18 @@ readOctetStringAP :: Reader [Word8]
 readOctetStringAP = readOctetStringAPTag >>=
                     (content id >=>
                      return . BS.unpack)
+
+data BitString = BitString Word8 [Word8]
+
+bitString n bs | n < 8 = BitString n bs
+               | otherwise = error "invalid number of unused bits"
+
+           {-}
+-- TODO what if the BitString is 0 length then this funciton will blow up on BS.head
+readBitStringAP :: Reader BitString
+readBitStringAP = readBitStringAPTag >>= \tag ->
+                  content id tag >>= \bs ->
+                  return $ bitString (BS.head bs) (BS.unpack bs)-}
 
 foldbytes :: BS.ByteString -> Word
 foldbytes = BS.foldl (\acc w -> acc * 256 + fromIntegral w) 0
