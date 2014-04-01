@@ -32,3 +32,9 @@ unfoldl' :: (a -> Maybe(Word8, a)) -> a -> [Word8] -> [Word8]
 unfoldl' f a bs = case f a of
                     Nothing -> []
                     Just(b, a') -> unfoldl' f a' (b : bs)
+
+{-}
+unfoldWord' :: Word -> (Word8, BS.ByteString)
+unfoldWord' = unfoldl unfoldStep
+  where unfoldStep 0 = Nothing
+        unfoldStep n = Just(fromIntegral (n .&. 0xFF), shiftR n 8)-}
