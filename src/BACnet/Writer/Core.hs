@@ -1,4 +1,3 @@
-{-# LANGUAGE TupleSections, RankNTypes #-}
 module BACnet.Writer.Core
   (
     Writer,
