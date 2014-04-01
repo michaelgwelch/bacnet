@@ -7,6 +7,8 @@ import BACnet.Reader
 import Data.Word
 import Data.Int
 
+andReturn = shouldBe
+infix 1 `andReturn`
 
 spec :: Spec
 spec = do
@@ -48,23 +50,11 @@ spec = do
     it "reads [0x31, 0x00] and returns 0" $
       run readSignedAP [0x31, 0x00] `shouldBe` 0
 
-    it "reads [0x31, 0xFF] and returns -1" $
-      run readSignedAP [0x31, 0xFF] `shouldBe` -1
-
-    it "reads [0x31, 0xFE] and returns -2" $
-      run readSignedAP [0x31, 0xFE] `shouldBe` -2
-
     it "reads [0x32, 0x00, 0x80] and returns 128" $
       run readSignedAP [0x32, 0x00, 0x80] `shouldBe` 128
 
-    it "reads [0x32, 0x80, 0x00] and returns -32768" $
-      run readSignedAP [0x32, 0x80, 0x00] `shouldBe` (-32768)
-
     it "reads [0x32, 0x7F, 0xFF] and returns 32767" $
       run readSignedAP [0x32, 0x7F, 0xFF] `shouldBe` 32767
-
-    it "reads [0x32, 0xFF, 0x7F] and returns -129" $
-      run readSignedAP [0x32, 0xFF, 0x7F] `shouldBe` (-129)
 
     it "reads [0x33, 0x00, 0x80, 0x00] and returns 32768" $
       run readSignedAP [0x33, 0x00, 0x80, 0x00] `shouldBe` 32768
@@ -72,8 +62,40 @@ spec = do
     it "reads [0x33, 0x7F, 0xFF, 0xFF] and returns 8388607" $
       run readSignedAP [0x33, 0x7F, 0xFF, 0xFF] `shouldBe` 8388607
 
+    it "reads [0x34, 0x00, 0x80, 0x00, 0x00] and returns 8388608" $
+      run readSignedAP [0x34, 0x00, 0x80, 0x00, 0x00] `andReturn` 8388608
+
+    it "reads [0x34, 0x7F, 0xFF, 0xFF, 0xFF] and returns 2147483647" $
+      run readSignedAP [0x34, 0x7F, 0xFF, 0xFF, 0xFF] `andReturn` 2147483647
+
+    it "reads [0x31, 0xFF] and returns -1" $
+      run readSignedAP [0x31, 0xFF] `shouldBe` -1
+
+    it "reads [0x31, 0xFE] and returns -2" $
+      run readSignedAP [0x31, 0xFE] `shouldBe` -2
+
+    it "reads [0x31, 0x80] and returns -128" $
+      run readSignedAP [0x31, 0x80] `shouldBe` -128
+
+    it "reads [0x32, 0xFF, 0x7F] and returns -129" $
+      run readSignedAP [0x32, 0xFF, 0x7F] `shouldBe` -129
+
+    it "reads [0x32, 0x80, 0x00] and returns -32768" $
+      run readSignedAP [0x32, 0x80, 0x00] `shouldBe` -32768
+
+    it "reads [0x33, 0xFF, 0x7F, 0xFF] and returns -32769" $
+      run readSignedAP [0x33, 0xFF, 0x7F, 0xFF] `andReturn` -32769
+
     it "reads [0x33, 0x80, 0x00, 0x00] and returns -8388608" $
       run readSignedAP [0x33, 0x80, 0x00, 0x00] `shouldBe` (-8388608)
+
+    it "reads [0x34, 0xFF, 0x7F, 0xFF, 0xFF] and returns -8388609" $
+      run readSignedAP [0x34, 0xFF, 0x7F, 0xFF, 0xFF] `andReturn` -8388609
+
+    it "reads [x034, 0x80, 0x00, 0x00, 0x00] and returns -2147483648" $
+      run readSignedAP [0x34, 0x80, 0x00, 0x00, 0x00] `andReturn` -2147483648
+
+
 
   describe "readFloatAP" $
     it "reads [0x44, 0x00, 0x00, 0x00, 0x01] and returns 1.4e-45" $
