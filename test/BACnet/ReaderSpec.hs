@@ -6,23 +6,39 @@ import Test.QuickCheck
 import BACnet.Reader
 import Data.Word
 import Data.Int
+import Control.Exception (evaluate)
 
 andReturn = shouldBe
 infix 1 `andReturn`
 
+eval :: a -> IO ()
+eval a =
+  do
+    evaluate a
+    return ()
+
 spec :: Spec
 spec = do
-  describe "readNullAP" $
+  describe "readNullAP" $ do
     it "reads [0x00] and returns ())" $
       run readNullAP [0x00] `shouldBe` ()
 
-  describe "readBoolAP" $
+    it "fails on any other 1 byte input" $
+      property $
+      forAll (choose (1,255))
+      (\b -> eval (run readNullAP [b]) `shouldThrow` anyErrorCall)
+
+  describe "readBoolAP" $ do
     it "reads [0x10] and returns False" $
       run readBoolAP [0x10] `shouldBe` False
 
-  describe "readBoolAP" $
     it "reads [0x11] and returns True" $
       run readBoolAP [0x11] `shouldBe` True
+
+    it "fails on any other 1 byte input" $
+      property $
+      forAll (choose (0,255) `suchThat` (\b -> b /= 0x10 && b /= 0x11))
+      (\b -> eval (run readBoolAP [b]) `shouldThrow` anyErrorCall)
 
   describe "readUnsignedAP" $ do
     it "reads [0x21, 0x00] and returns 0" $
@@ -41,6 +57,14 @@ spec = do
     it "reads [0x23, 0xFF, 0xFF, 0xFF] and returns 16777215" $
       run readUnsignedAP [0x23, 0xFF, 0xFF, 0xFF] `shouldBe`
         16777215
+
+    it "reads [0x24, 0x01, 0x00, 0x00, 0x00] and returns 16777216" $
+      run readUnsignedAP [0x24, 0x01, 0x00, 0x00, 0x00, 0x00]
+      `shouldBe` 16777216
+
+    it "reads [0x24, 0xFF, 0xFF, 0xFF, 0xFF] and returns 4294967295" $
+      run readUnsignedAP [0x24, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF]
+      `shouldBe` 4294967295
 
     it "reads [0x25, 0x05, 0x01, 0x00, 0x00, 0x00, 0x00, x0ff] and returns 4294967296" $
       run readUnsignedAP [0x25, 0x05, 0x01, 0x00, 0x00, 0x00, 0x00, 0xff]
