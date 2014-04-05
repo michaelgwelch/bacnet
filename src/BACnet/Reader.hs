@@ -11,6 +11,9 @@ module BACnet.Reader
     readRealAP,
     readDoubleAP,
     readOctetStringAP,
+    readStringAP,
+    readBitStringAP,
+    readEnumeratedAP
   ) where
 
 import Control.Applicative
@@ -22,8 +25,11 @@ import Data.Word
 import Data.Int
 import BACnet.Tag
 import BACnet.Reader.Core
+import BACnet.Prim
+import qualified BACnet.Prim as Pr
 import Data.ByteString.Lazy hiding (foldl)
 import qualified Data.ByteString.Lazy as BS
+import qualified Data.ByteString.Lazy.UTF8 as UTF8
 
 -- | Reads an application encoded null value
 readNullAP :: Reader ()
@@ -63,17 +69,22 @@ readOctetStringAP = readOctetStringAPTag >>=
                     (content id >=>
                      return . BS.unpack)
 
-data BitString = BitString Word8 [Word8]
+readStringAP :: Reader String
+readStringAP =
+  do
+    t <- readStringAPTag
+    sat (==0x00) -- encoding is 0x00 which is the value used to indicate UTF-8 (formerly ANSI X3.4)
+    bs <- bytes $ fromIntegral $ tagLength t - 1
+    return $ UTF8.toString bs
 
-bitString n bs | n < 8 = BitString n bs
-               | otherwise = error "invalid number of unused bits"
-
-           {-}
--- TODO what if the BitString is 0 length then this funciton will blow up on BS.head
 readBitStringAP :: Reader BitString
 readBitStringAP = readBitStringAPTag >>= \tag ->
                   content id tag >>= \bs ->
-                  return $ bitString (BS.head bs) (BS.unpack bs)-}
+                  return $ if (BS.null bs) then Pr.empty
+                           else bitString (BS.head bs) (BS.unpack $ BS.tail bs)
+
+readEnumeratedAP :: Reader Enumerated
+readEnumeratedAP = readEnumeratedAPTag >>= content foldbytes >>= return . Enumerated
 
 foldbytes :: BS.ByteString -> Word
 foldbytes = BS.foldl (\acc w -> acc * 256 + fromIntegral w) 0

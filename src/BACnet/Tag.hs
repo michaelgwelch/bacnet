@@ -12,7 +12,9 @@ module BACnet.Tag
   readRealAPTag,
   readDoubleAPTag,
   readOctetStringAPTag,
+  readStringAPTag,
   readBitStringAPTag,
+  readEnumeratedAPTag,
   Tag(..),
   boolVal,
   tagLength,
@@ -47,7 +49,7 @@ data Tag =
         | DoubleCS Word8
         | OctetStringAP Word32 -- length
         | OctetStringCS Word8 Word32
-        | CharacterStringAP Word8 Word32 -- encoding, length
+        | CharacterStringAP Word32 -- length
         | BitStringAP Word32 -- length
         | BitStringCS Word8 Word32
         | EnumeratedAP Word32 -- length
@@ -131,6 +133,9 @@ readOctetStringAPTag = readAP 6 OctetStringAP
 readOctetStringCSTag :: Word8 -> Reader Tag
 readOctetStringCSTag t = readCS t (const True) OctetStringCS
 
+readStringAPTag :: Reader Tag
+readStringAPTag = readAP 7 CharacterStringAP
+
 readBitStringAPTag :: Reader Tag
 readBitStringAPTag = readAP 8 BitStringAP
 
@@ -167,7 +172,7 @@ readCS tn p co
     where
       guardTagNumber expected actual
         = when (actual == 0x0F) (void $ sat(==expected)) <|>
-            (guard $ (expected == actual))
+            guard (expected == actual)
 
 lengthOfContent :: Word8 -> Reader Word32
 lengthOfContent b | TC.lvt b < 5 = return . fromIntegral $ TC.lvt b
@@ -193,6 +198,7 @@ tagLength :: Tag -> Word32
 tagLength (UnsignedAP len) = len
 tagLength (SignedAP len) = len
 tagLength (OctetStringAP len) = len
+tagLength (CharacterStringAP len) = len
 
 
 
@@ -254,14 +260,14 @@ writeUnsignedAPTag 0 = WC.unsigned16 0x2100
 writeUnsignedAPTag v =
   let initialOctet = 0x20 + len
       (len, bs)    = unfoldNum v []
-  in WC.bytes ((fromIntegral initialOctet) : bs)
+  in WC.bytes (fromIntegral initialOctet : bs)
 
 writeSignedAPTag :: Word32 -> WC.Writer
 writeSignedAPTag 0 = WC.signed16 0x3100
 writeSignedAPTag v =
   let initialOctet = 0x30 + len
       (len, bs)    = unfoldNum v []
-  in WC.bytes ((fromIntegral initialOctet) : bs)
+  in WC.bytes (fromIntegral initialOctet : bs)
 
 writeRealAPTag :: Float -> WC.Writer
 writeRealAPTag = (WC.unsigned8 0x44 <>) . WC.real

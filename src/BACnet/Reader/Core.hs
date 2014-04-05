@@ -9,7 +9,11 @@ module BACnet.Reader.Core
   bytes,
   sat,
   runReader,
-  run
+  run,
+  (Ap.<|>),
+  Ap.many,
+  try,
+  (<$>)
   ) where
 
 import qualified Data.ByteString.Lazy as BS
@@ -18,7 +22,8 @@ import Data.Word
 import Control.Applicative hiding ((<|>))
 import qualified Control.Applicative as Ap
 import Control.Monad
-import Text.Parsec.Prim
+import Text.Parsec.Prim hiding (try)
+import qualified Text.Parsec.Prim as Pr
 import Text.Parsec.Error
 import Text.Parsec.Pos
 import Numeric
@@ -82,6 +87,9 @@ bytes n = BS.cons <$> byte <*> bytes (n-1)
 readerBind :: Reader a -> (a -> Reader b) -> Reader b
 readerBind (R pa) f = R (pa >>= \val ->
                          let (R pb) = f val in pb)
+
+try :: Reader a -> Reader a
+try (R pa) = R (Pr.try pa)
 
 instance Monad Reader where
   fail _ = R $ parserFail ""

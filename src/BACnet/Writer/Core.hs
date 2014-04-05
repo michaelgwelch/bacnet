@@ -3,7 +3,10 @@ module BACnet.Writer.Core
     Writer,
     runW,
     empty,
+
+    -- | Appends one writer to another
     append,
+    -- | An infix synonym for 'append'
     (<>),
     null,
     unsigned8,
@@ -12,7 +15,8 @@ module BACnet.Writer.Core
     signed16,
     real,
     double,
-    bytes
+    bytes,
+    mconcat,
   ) where
 
 import qualified Data.ByteString.Lazy as BS
@@ -21,14 +25,16 @@ import Data.ByteString.Lazy.Builder (
   Builder, floatBE, doubleBE)
 import Data.Word (Word8, Word16)
 import Data.Int (Int8, Int16)
-import Data.Monoid (Monoid, (<>), mempty, mappend)
-import Prelude hiding (null)
+import Data.Monoid (Monoid, (<>), mempty, mappend, mconcat)
+import Prelude hiding (null, maybe)
 import qualified Prelude as P
 import Data.Bits ((.&.))
 import qualified Control.Applicative as A
 import qualified Control.Monad as M
 
--- | A writer
+-- | A writer. All of the BACnet writers are this type. Writers
+--   can be combined together to form more complex writers using
+--   'mappend' or the equivalent operator ('<>')
 newtype Writer = W { unWriter :: Builder }
 
 -- | A builder that writes the byte 0x00
