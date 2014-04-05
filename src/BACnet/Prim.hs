@@ -7,9 +7,9 @@ module BACnet.Prim
     empty,
     testBit,
     Enumerated(..),
-    Date,
-    Time,
-    ObjectIdentifier
+    Date(..),
+    Time(..),
+    ObjectIdentifier(..)
   ) where
 
 import Data.Word (Word8, Word16, Word32, Word)
@@ -31,7 +31,7 @@ bitString n bs | n < 8 = BitString n bs
 -- | The function @testBit b n@ returns true if the nth bit is set. Counting
 --   starts at 0 at the left most bit of the left most byte of 'getBytes'
 testBit :: BitString -> Word -> Bool
-testBit (BitString unusedBits bs) n = testBit' unusedBits bs n
+testBit (BitString unusedBits bs) = testBit' unusedBits bs
 
 testBit' :: Word8 -> [Word8] -> Word -> Bool
 testBit' _ [] _ = error "empty list of bytes"
@@ -61,7 +61,7 @@ data Time = Time
 newtype ObjectIdentifier = ObjectIdentifier { getRawValue :: Word32 }
 
 getObjectType :: ObjectIdentifier -> Word16
-getObjectType = fromIntegral . (.&. 0x3F) . (flip shiftR 22) . getRawValue
+getObjectType = fromIntegral . (.&. 0x3F) . flip shiftR 22 . getRawValue
 
 getInstanceNumber :: ObjectIdentifier -> Word32
 getInstanceNumber = (.&. 0x003FFFFF) . getRawValue

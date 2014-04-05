@@ -6,7 +6,7 @@ import BACnet.Prim
 import Control.Exception (evaluate)
 
 spec =
-  do
+
     describe "testBit" $ do
       context "when given (BitString 0 [0xF0])" $ do
         let bs = bitString 0 [0xF0]

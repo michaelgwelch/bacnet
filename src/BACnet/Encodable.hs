@@ -69,7 +69,27 @@ instance Encodable Enumerated where
   bacnetEncode = undefined
   bacnetDecode = readEnumeratedAP
 
+instance Encodable Date where
+  bacnetEncode = undefined
+  bacnetDecode = readDateAP
 
+instance Encodable Time where
+  bacnetEncode = undefined
+  bacnetDecode = readTimeAP
+
+instance Encodable ObjectIdentifier where
+  bacnetEncode = undefined
+  bacnetDecode = readObjectIdentifierAP
+
+
+class CSEncodable a where
+  csbacnetEncode :: Word8 -> a -> Writer
+  csbacnetDecode :: Word8 -> Reader a
+
+{-}
+instance CSEncodable Bool where
+  csbacnetEncode = undefined
+  csbacnetDecode = readBoolCS -}
 
 {-
 data ValueUpdate = VU { identity :: Int32, val :: Word32 }

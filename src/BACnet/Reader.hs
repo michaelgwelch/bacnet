@@ -13,7 +13,10 @@ module BACnet.Reader
     readOctetStringAP,
     readStringAP,
     readBitStringAP,
-    readEnumeratedAP
+    readEnumeratedAP,
+    readDateAP,
+    readTimeAP,
+    readObjectIdentifierAP
   ) where
 
 import Control.Applicative
@@ -78,13 +81,26 @@ readStringAP =
     return $ UTF8.toString bs
 
 readBitStringAP :: Reader BitString
-readBitStringAP = readBitStringAPTag >>= \tag ->
-                  content id tag >>= \bs ->
-                  return $ if (BS.null bs) then Pr.empty
-                           else bitString (BS.head bs) (BS.unpack $ BS.tail bs)
+readBitStringAP =
+  do
+    tag <- readBitStringAPTag
+    bs <- content id tag
+    return $ if BS.null bs then Pr.empty
+             else bitString (BS.head bs) (BS.unpack $ BS.tail bs)
 
 readEnumeratedAP :: Reader Enumerated
-readEnumeratedAP = readEnumeratedAPTag >>= content foldbytes >>= return . Enumerated
+readEnumeratedAP = liftM Enumerated $ readEnumeratedAPTag >>= content foldbytes
+
+readDateAP :: Reader Date
+readDateAP = liftM4 Date (readDateAPTag >> byte) byte byte byte
+
+readTimeAP :: Reader Time
+readTimeAP = liftM4 Time (readTimeAPTag >> byte) byte byte byte
+
+readObjectIdentifierAP :: Reader ObjectIdentifier
+readObjectIdentifierAP = liftM (ObjectIdentifier . fromIntegral) $
+                         readObjectIdentifierAPTag >>= content foldbytes
+
 
 foldbytes :: BS.ByteString -> Word
 foldbytes = BS.foldl (\acc w -> acc * 256 + fromIntegral w) 0
