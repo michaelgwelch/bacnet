@@ -12,11 +12,12 @@ import Data.Word
 import Prelude hiding (null)
 
 writeNullAP :: Writer
-writeNullAP = null
+writeNullAP = writeNullAPTag
 
 writeBoolAP :: Bool -> Writer
-writeBoolAP False = unsigned8 0x10
-writeBoolAP True = unsigned8 0x11
+writeBoolAP = writeBoolAPTag
 
 writeUnsignedAP :: Word32 -> Writer
-writeUnsignedAP 0 = unsigned8 0x21 <> unsigned8 0x00
+writeUnsignedAP n =
+  let (len, bs) = unfoldNum n
+  in writeUnsignedAPTag len <> bytes bs

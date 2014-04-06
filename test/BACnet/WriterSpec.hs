@@ -18,6 +18,9 @@ spec =
       it "writes [0x11] for Bool input True" $
         runW (writeBoolAP True) `shouldBe` [0x11]
 
-    describe "writeUnsignedAP" $
+    describe "writeUnsignedAP" $ do
       it "writes [0x21, 0x00] for input 0" $
         runW (writeUnsignedAP 0) `shouldBe` [0x21, 0x00]
+
+      it "writes [0x21, 0xFF] for input 255" $
+        runW (writeUnsignedAP 255) `shouldBe` [0x21, 0xFF]
