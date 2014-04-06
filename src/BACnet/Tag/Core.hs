@@ -59,11 +59,9 @@ isExtendedLength :: Word8 -> Bool
 isExtendedLength = (== 0x05) . lvt
 
 
--- | Returns the tag number valud encoded into an initial octet.
+-- | Returns the tag number value encoded into an initial octet.
 --   As one would expect it can't return the actual tag number in the
 --   case of extended tag numbers since it is only given the initial octet
 --   as input.
 tagNumber :: Word8 -> Word8
-tagNumber b | isCS b = tNum
-            | otherwise = assert (tNum < 13) tNum
-  where tNum = (0x0F .&.) $ shiftR b 4
+tagNumber = (0x0F .&.) . flip shiftR 4

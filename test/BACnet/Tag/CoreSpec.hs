@@ -51,11 +51,7 @@ spec = do
     it "returns True if lvt == 5, else False" $
       property (\b -> isExtendedLength b `shouldBe` (lvt b == 5))
 
-  describe "tagNumber" $ do
-    it "throws an AssertionException if tagNumber > 12 and isAP" $ do
-      evaluate (tagNumber 0xD5) `shouldThrow` anyAssertionFailed
-      evaluate (tagNumber 0xE4) `shouldThrow` anyAssertionFailed
-      evaluate (tagNumber 0xF0) `shouldThrow` anyAssertionFailed
-
-    it "returns 15 if tagNumber is 15 and isCS" $
-      tagNumber 0xF8 `shouldBe` 15
+  describe "tagNumber" $
+    it "returns the 4 most significants bits shifted right 4 (without sign extension)" $
+      property $ forAll (choose (0,15))
+      (\n -> tagNumber (shiftL n 4) `shouldBe` n)

@@ -1,4 +1,2 @@
 language: haskell
 
-script:
-  - cabal configure --enable-tests --disable-optimization && cabal build && cabal test

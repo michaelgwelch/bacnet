@@ -7,7 +7,7 @@ configure:
 	cabal configure
 
 configureTest:
-	cabal configure --enable-tests --disable-optimization
+	cabal configure --enable-tests 
 
 lint:
 	hlint .
