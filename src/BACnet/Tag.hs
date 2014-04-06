@@ -270,17 +270,14 @@ writeBoolAPTag :: Bool -> WC.Writer
 writeBoolAPTag b = WC.unsigned8 (if b then 0x11 else 0x10)
 
 writeUnsignedAPTag :: Word32 -> WC.Writer
-writeUnsignedAPTag len | len < 5 = WC.unsigned8 (0x20 + fromIntegral len)
-                       | otherwise = WC.unsigned8 0x25 <> WC.unsigned8 (fromIntegral len)
+writeUnsignedAPTag = writeIntegralTag 0x20
 
 writeSignedAPTag :: Word32 -> WC.Writer
-writeSignedAPTag len | len < 5 = WC.unsigned8 (0x30 + fromIntegral len)
-                     | otherwise = WC.unsigned8 0x35 <> WC.unsigned8 (fromIntegral len)
-{-writeSignedAPTag 0 = WC.signed16 0x3100
-writeSignedAPTag v =
-  let initialOctet = 0x30 + len
-      (len, bs)    = unfoldNum v []
-  in WC.bytes (fromIntegral initialOctet : bs)-}
+writeSignedAPTag = writeIntegralTag 0x30
+
+writeIntegralTag :: (Ord a, Num a, Integral a) => Word8 -> a -> WC.Writer
+writeIntegralTag tag len | len < 5 = WC.unsigned8 (tag + fromIntegral len)
+                         | otherwise = WC.unsigned8 (tag + 5) <> WC.unsigned8 (fromIntegral len)
 
 writeRealAPTag :: Float -> WC.Writer
 writeRealAPTag = (WC.unsigned8 0x44 <>) . WC.real
