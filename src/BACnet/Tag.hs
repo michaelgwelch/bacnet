@@ -268,7 +268,6 @@ writeBoolAPTag :: Bool -> WC.Writer
 writeBoolAPTag b = WC.unsigned8 (if b then 0x11 else 0x10)
 
 writeUnsignedAPTag :: Word32 -> WC.Writer
-writeUnsignedAPTag 0 = WC.unsigned8 0x21
 writeUnsignedAPTag len | len < 5 = WC.unsigned8 (0x20 + fromIntegral len)
                        | otherwise = WC.unsigned8 0x25 <> WC.unsigned8 (fromIntegral len)
 
