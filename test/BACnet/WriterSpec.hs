@@ -39,3 +39,7 @@ spec =
 
       it "writes [0x24, 0x01, 0x00, 0x00, 0x00] for input 16777216" $
         runW (writeUnsignedAP 16777216) `shouldBe` [0x24, 0x01, 0x00, 0x00, 0x00]
+
+    describe "writeSignedAP" $ do
+      it "writes [0x31, 0x00] for input 0" $
+        runW (writeSignedAP 0) `shouldBe` [0x31, 0x00]

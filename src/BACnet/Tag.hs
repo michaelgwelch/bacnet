@@ -24,6 +24,7 @@ module BACnet.Tag
   writeNullAPTag,
   writeBoolAPTag,
   writeUnsignedAPTag,
+  writeSignedAPTag,
   unfoldNum,
   ) where
 
@@ -272,7 +273,8 @@ writeUnsignedAPTag len | len < 5 = WC.unsigned8 (0x20 + fromIntegral len)
                        | otherwise = WC.unsigned8 0x25 <> WC.unsigned8 (fromIntegral len)
 
 writeSignedAPTag :: Word32 -> WC.Writer
-writeSignedAPTag = undefined
+writeSignedAPTag len | len < 5 = WC.unsigned8 (0x30 + fromIntegral len)
+                     | otherwise = WC.unsigned8 0x35 <> WC.unsigned8 (fromIntegral len)
 {-writeSignedAPTag 0 = WC.signed16 0x3100
 writeSignedAPTag v =
   let initialOctet = 0x30 + len
