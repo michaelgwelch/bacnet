@@ -4,9 +4,10 @@ import Test.HUnit
 import Test.Hspec
 import Test.QuickCheck
 import BACnet.Reader
+import BACnet.Prim
 import Data.Word
 import Data.Int
-import Control.Exception (evaluate)
+import Control.Exception (Exception, evaluate)
 import Numeric.Limits
 
 andReturn = shouldBe
@@ -23,6 +24,9 @@ posInfinity = 1/0
 
 negInfinity :: RealFloat a => a
 negInfinity = -posInfinity
+
+shouldThrow' :: Exception e => a -> Selector e -> Expectation
+shouldThrow' a s = evaluate a `shouldThrow` s
 
 eval :: a -> IO ()
 eval a =
@@ -202,3 +206,37 @@ spec = do
 
     it "reads [0x75, 0x06, 0x00, 0x48, 0x45, 0x4C, 0x4C, 0x4F] and returns \"HELLO\"" $
       run readStringAP [0x075, 0x06, 0x00, 0x48, 0x45, 0x4C, 0x4C, 0x4F] `shouldBe` "HELLO"
+
+  describe "readBitStringAP" $ do
+    it "reads [0x80] and throws an error. Must be at least length 1" $
+      run readBitStringAP [0x80] `shouldThrow'` anyErrorCall
+
+    it "reads [0x82 0x03 0xF7] and returns 'bitString 3 [0xF7]'" $
+      run readBitStringAP [0x82, 0x03, 0xF7] `shouldBe` bitString 3 [0xF7]
+
+  describe "readEnumeratedAP" $ do
+    it "reads [0x91, 0x00] and returns 0" $
+      run readEnumeratedAP [0x91, 0x00] `shouldBe` Enumerated 0
+
+    it "reads [0x92, 0x01, 0x00] and returns 256" $
+      run readEnumeratedAP [0x92, 0x01, 0x00] `shouldBe` Enumerated 256
+
+    it "reads [0x92, 0xFF, 0xFF] and returns 65535" $
+      run readEnumeratedAP [0x92, 0xFF, 0xFF] `shouldBe` Enumerated 65535
+
+    it "reads [0x93, 0x01, 0x00, 0x00] and returns 65536" $
+      run readEnumeratedAP [0x93, 0x01, 0x00, 0x00] `shouldBe`
+        Enumerated 65536
+
+  describe "readDateAP" $
+    it "reads [0xA4, 0x72, 0x04, 0x06, 0xFF] and returns Date 114 4 6 255" $
+      run readDateAP [0xa4, 0x72, 0x04, 0x06, 0xFF] `shouldBe` Date 114 4 6 255
+
+  describe "readTimeAP" $
+    it "reads [0xB4, 0x0A, 0x26, 0x22, 0xFF] and returns Time 10 38 34 255" $
+      run readTimeAP [0xb4, 0x0a, 0x26, 0x22, 0xFF] `shouldBe` Time 10 38 34 255
+
+  describe "readObjectIdentifierAP" $
+    it "reads [0xC4, 0x00, 0xC0, 0x00, 0x0F] and returns objectIdentifier 3 15" $
+      run readObjectIdentifierAP [0xc4, 0x00, 0xc0, 0x00, 0x0F] `shouldBe`
+        objectIdentifier 3 15

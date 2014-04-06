@@ -84,22 +84,23 @@ readBitStringAP :: Reader BitString
 readBitStringAP =
   do
     tag <- readBitStringAPTag
+    guard (tagLength tag /= 0)
     bs <- content id tag
     return $ if BS.null bs then Pr.empty
              else bitString (BS.head bs) (BS.unpack $ BS.tail bs)
 
 readEnumeratedAP :: Reader Enumerated
-readEnumeratedAP = liftM Enumerated $ readEnumeratedAPTag >>= content foldbytes
+readEnumeratedAP = Enumerated <$> (readEnumeratedAPTag >>= content foldbytes)
 
 readDateAP :: Reader Date
-readDateAP = liftM4 Date (readDateAPTag >> byte) byte byte byte
+readDateAP = Date <$> (readDateAPTag >> byte) <*> byte <*> byte <*> byte
 
 readTimeAP :: Reader Time
 readTimeAP = liftM4 Time (readTimeAPTag >> byte) byte byte byte
 
 readObjectIdentifierAP :: Reader ObjectIdentifier
-readObjectIdentifierAP = liftM (ObjectIdentifier . fromIntegral) $
-                         readObjectIdentifierAPTag >>= content foldbytes
+readObjectIdentifierAP = (ObjectIdentifier . fromIntegral) <$>
+                         (readObjectIdentifierAPTag >>= content foldbytes)
 
 
 foldbytes :: BS.ByteString -> Word

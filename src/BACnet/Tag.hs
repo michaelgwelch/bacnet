@@ -202,6 +202,9 @@ tagLength (UnsignedAP len) = len
 tagLength (SignedAP len) = len
 tagLength (OctetStringAP len) = len
 tagLength (CharacterStringAP len) = len
+tagLength (BitStringAP len) = len
+tagLength (EnumeratedAP len) = len
+tagLength ObjectIdentifierAP = 4
 
 
 

@@ -9,11 +9,12 @@ module BACnet.Prim
     Enumerated(..),
     Date(..),
     Time(..),
-    ObjectIdentifier(..)
+    ObjectIdentifier(..),
+    objectIdentifier
   ) where
 
 import Data.Word (Word8, Word16, Word32, Word)
-import Data.Bits (shiftR, (.&.))
+import Data.Bits (shiftR, shiftL, (.&.), (.|.))
 import qualified Data.Bits as B
 
 newtype CharacterString = CharacterString { getString :: String }
@@ -40,7 +41,7 @@ testBit' u [b] n | n > fromIntegral (7 - u) = error "index out of bounds"
 testBit' u (b:bs) n | n > 7 = testBit' u bs (n - 8)
                     | otherwise = B.testBit b (fromIntegral $ 7 - n)
 
-newtype Enumerated = Enumerated { getEnumValue :: Word }
+newtype Enumerated = Enumerated { getEnumValue :: Word } deriving (Eq, Show)
 
 data Date = Date
   {
@@ -48,7 +49,7 @@ data Date = Date
     getMonth :: Word8,
     getDayOfMonth :: Word8,
     getDayOfWeek :: Word8
-  }
+  } deriving (Show, Eq)
 
 data Time = Time
   {
@@ -56,9 +57,21 @@ data Time = Time
     getMinute :: Word8,
     getSecond :: Word8,
     getHundredth :: Word8
-  }
+  } deriving (Show, Eq)
 
 newtype ObjectIdentifier = ObjectIdentifier { getRawValue :: Word32 }
+  deriving (Show, Eq)
+
+objectIdentifier :: Word16 -> Word32 -> ObjectIdentifier
+objectIdentifier ot inum =
+  ObjectIdentifier rawValue
+  where rawValue = inum' + shiftL ot' 22
+        inum'
+          | inum > 0x3FFFFF = error "invalid instance number > 0x3FFFFF"
+          | otherwise = inum
+        ot'
+          | ot > 0x3FF = error "invalid object type > 0x3FF"
+          | otherwise = fromIntegral ot
 
 getObjectType :: ObjectIdentifier -> Word16
 getObjectType = fromIntegral . (.&. 0x3F) . flip shiftR 22 . getRawValue
