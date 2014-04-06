@@ -24,6 +24,7 @@ module BACnet.Tag
   writeNullAPTag,
   writeBoolAPTag,
   writeUnsignedAPTag,
+  unfoldNum,
   ) where
 
 import Control.Monad
@@ -245,12 +246,17 @@ instance Unfoldable Int16 where
 instance Unfoldable Int8 where
   byteGuard = signedByteGuard
 
+
 unfoldNum :: (Num a, Unfoldable a, Ord a, Bits a, Integral a)
+  => a -> (Word32, [Word8])
+unfoldNum = flip unfoldNum' []
+
+unfoldNum' :: (Num a, Unfoldable a, Ord a, Bits a, Integral a)
   => a -> [Word8] -> (Word32, [Word8])
-unfoldNum n bs
+unfoldNum' n bs
   | byteGuard n = (1, currentByte : bs)
   | otherwise =
-    let (len, bs') = unfoldNum (shiftR n 8) (currentByte : bs)
+    let (len, bs') = unfoldNum' (shiftR n 8) (currentByte : bs)
     in (len+1, bs')
   where currentByte = fromIntegral (n .&. 0xFF)
 
@@ -262,18 +268,17 @@ writeBoolAPTag :: Bool -> WC.Writer
 writeBoolAPTag b = WC.unsigned8 (if b then 0x11 else 0x10)
 
 writeUnsignedAPTag :: Word32 -> WC.Writer
-writeUnsignedAPTag 0 = WC.unsigned16 0x2100
-writeUnsignedAPTag v =
-  let initialOctet = 0x20 + len
-      (len, bs)    = unfoldNum v []
-  in WC.bytes (fromIntegral initialOctet : bs)
+writeUnsignedAPTag 0 = WC.unsigned8 0x21
+writeUnsignedAPTag len | len < 5 = WC.unsigned8 (0x20 + fromIntegral len)
+                       | otherwise = WC.unsigned8 0x25 <> WC.unsigned8 (fromIntegral len)
 
 writeSignedAPTag :: Word32 -> WC.Writer
-writeSignedAPTag 0 = WC.signed16 0x3100
+writeSignedAPTag = undefined
+{-writeSignedAPTag 0 = WC.signed16 0x3100
 writeSignedAPTag v =
   let initialOctet = 0x30 + len
       (len, bs)    = unfoldNum v []
-  in WC.bytes (fromIntegral initialOctet : bs)
+  in WC.bytes (fromIntegral initialOctet : bs)-}
 
 writeRealAPTag :: Float -> WC.Writer
 writeRealAPTag = (WC.unsigned8 0x44 <>) . WC.real
