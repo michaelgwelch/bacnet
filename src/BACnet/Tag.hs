@@ -26,6 +26,7 @@ module BACnet.Tag
   writeUnsignedAPTag,
   writeSignedAPTag,
   unfoldNum,
+  Unfoldable,
   ) where
 
 import Control.Monad
