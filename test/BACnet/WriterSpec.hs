@@ -30,3 +30,6 @@ spec =
 
       it "writes [0x22, 0xFF, 0xFF] for input 65535" $
         runW (writeUnsignedAP 65535) `shouldBe` [0x22, 0xFF, 0xFF]
+
+      it "writes [023, 0x01, 0x00, 0x00] for input 65536" $
+        runW (writeUnsignedAP 65536) `shouldBe` [0x23, 0x01, 0x00, 0x00]
