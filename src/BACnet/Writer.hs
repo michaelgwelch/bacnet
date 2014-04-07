@@ -6,9 +6,11 @@ module BACnet.Writer
     writeSignedAP,
     writeRealAP,
     writeDoubleAP,
+    writeDateAP,
     runW
   ) where
 
+import BACnet.Prim
 import BACnet.Writer.Core
 import BACnet.Tag
 import Data.Bits
@@ -39,3 +41,7 @@ writeRealAP f = writeRealAPTag <> real f
 
 writeDoubleAP :: Double -> Writer
 writeDoubleAP d = writeDoubleAPTag <> double d
+
+writeDateAP :: Date -> Writer
+writeDateAP (Date y m dm dw) =
+  writeDateAPTag <> unsigned8 y <> unsigned8 m <> unsigned8 dm <> unsigned8 dw

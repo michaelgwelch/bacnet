@@ -27,6 +27,7 @@ module BACnet.Tag
   writeSignedAPTag,
   writeRealAPTag,
   writeDoubleAPTag,
+  writeDateAPTag,
   unfoldNum,
   Unfoldable,
   ) where
@@ -286,3 +287,6 @@ writeRealAPTag = WC.unsigned8 0x44
 
 writeDoubleAPTag :: WC.Writer
 writeDoubleAPTag = WC.unsigned16 0x5508
+
+writeDateAPTag :: WC.Writer
+writeDateAPTag = WC.unsigned8 0xA4
