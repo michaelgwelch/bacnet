@@ -7,6 +7,7 @@ module BACnet.Writer
     writeRealAP,
     writeDoubleAP,
     writeDateAP,
+    writeTimeAP,
     runW
   ) where
 
@@ -45,3 +46,7 @@ writeDoubleAP d = writeDoubleAPTag <> double d
 writeDateAP :: Date -> Writer
 writeDateAP (Date y m dm dw) =
   writeDateAPTag <> unsigned8 y <> unsigned8 m <> unsigned8 dm <> unsigned8 dw
+
+writeTimeAP :: Time -> Writer
+writeTimeAP (Time h m s hs) =
+  writeTimeAPTag <> unsigned8 h <> unsigned8 m <> unsigned8 s <> unsigned8 hs

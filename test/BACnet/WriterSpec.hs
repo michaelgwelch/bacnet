@@ -100,3 +100,7 @@ spec =
     describe "writeDateAP" $
       it "writes [0xA4, 0x72, 0x04, 0x06, 0xFF] for Date 114 4 6 255" $
         runW (writeDateAP $ Date 114 4 6 255) `shouldBe` [0xA4, 0x72, 0x04, 0x06, 0xFF]
+
+    describe "writeTimeAP" $
+      it "writes [0xB4, 0x09, 0x1A, 0x13, 0xFF] for Time 9 26 19 255" $
+        runW (writeTimeAP $ Time 9 26 19 255) `shouldBe` [0xB4, 0x09, 0x1A, 0x13, 0xFF]
