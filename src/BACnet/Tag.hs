@@ -25,6 +25,7 @@ module BACnet.Tag
   writeBoolAPTag,
   writeUnsignedAPTag,
   writeSignedAPTag,
+  writeRealAPTag,
   unfoldNum,
   Unfoldable,
   ) where
@@ -279,8 +280,8 @@ writeIntegralTag :: (Ord a, Num a, Integral a) => Word8 -> a -> WC.Writer
 writeIntegralTag tag len | len < 5 = WC.unsigned8 (tag + fromIntegral len)
                          | otherwise = WC.unsigned8 (tag + 5) <> WC.unsigned8 (fromIntegral len)
 
-writeRealAPTag :: Float -> WC.Writer
-writeRealAPTag = (WC.unsigned8 0x44 <>) . WC.real
+writeRealAPTag :: WC.Writer
+writeRealAPTag = WC.unsigned8 0x44
 
 writeDoubleAPTag :: Double -> WC.Writer
 writeDoubleAPTag = (WC.unsigned16 0x5508 <>) . WC.double

@@ -3,6 +3,7 @@ module BACnet.WriterSpec where
 import Test.Hspec
 import Test.QuickCheck
 import BACnet.Writer
+import Numeric.Limits
 
 spec :: Spec
 spec =
@@ -77,3 +78,13 @@ spec =
       it "writes [0x34, 0x80, 0x00, 0x00, 0x00] for input -2147483648" $
         runW (writeSignedAP (-2147483648)) `shouldBe`
           [0x34, 0x80, 0x00, 0x00, 0x00]
+
+    describe "writeRealAP" $ do
+      it "writes [0x44, 0x00, 0x00, 0x00, 0x01] for input  1.4e-45" $
+        runW (writeRealAP  1.4e-45) `shouldBe` [0x44, 0x00, 0x00, 0x00, 0x01]
+
+      it "writes [0x44, 0x7F, 0x7F, 0xFF, 0xFF] for input 3.4028235E38" $
+        runW (writeRealAP 3.4028235E38) `shouldBe` [0x44, 0x7F, 0x7F, 0xFF, 0xFF]
+
+      it "writes [0x44, 0xFF, 0x80, 0x00, 0x00] for input -infinity" $
+        runW (writeRealAP (-1.0/0.0)) `shouldBe` [0x44, 0xFF, 0x80, 0x00, 0x00]
