@@ -4,6 +4,8 @@ module BACnet.Writer
     writeBoolAP,
     writeUnsignedAP,
     writeSignedAP,
+    writeRealAP,
+    writeDoubleAP,
     runW
   ) where
 
@@ -31,3 +33,9 @@ writeIntegral :: (Num a, Unfoldable a, Ord a, Bits a, Integral a)
 writeIntegral tagWriter n =
   let (len, bs) = unfoldNum n
   in tagWriter len <> bytes bs
+
+writeRealAP :: Float -> Writer
+writeRealAP f = writeRealAPTag <> real f
+
+writeDoubleAP :: Double -> Writer
+writeDoubleAP d = writeDoubleAPTag <> double d
