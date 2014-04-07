@@ -5,6 +5,7 @@ module BACnet.Writer
     writeUnsignedAP,
     writeSignedAP,
     writeRealAP,
+    writeDoubleAP,
     runW
   ) where
 
@@ -34,4 +35,7 @@ writeIntegral tagWriter n =
   in tagWriter len <> bytes bs
 
 writeRealAP :: Float -> Writer
-writeRealAP f = writeRealAPTag <> (real f)
+writeRealAP f = writeRealAPTag <> real f
+
+writeDoubleAP :: Double -> Writer
+writeDoubleAP d = writeDoubleAPTag <> double d
