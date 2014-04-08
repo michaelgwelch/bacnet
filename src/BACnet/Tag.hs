@@ -201,8 +201,8 @@ lengthOfContent' = byte >>= \b ->
                       then return $ fromIntegral b
                       else fmap foldbytes (bytes (if b == 254 then 2 else 4))
 
-foldbytes :: BS.ByteString -> Word32
-foldbytes = BS.foldl (\acc w -> acc * 256 + fromIntegral w) 0
+foldbytes :: [Word8] -> Word32
+foldbytes = foldl (\acc w -> acc * 256 + fromIntegral w) 0
 
 boolVal :: Tag -> Bool
 boolVal (BoolAP val) = val

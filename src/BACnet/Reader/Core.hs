@@ -7,6 +7,7 @@ module BACnet.Reader.Core
   peek,
   byte,
   bytes,
+  bytestring,
   sat,
   runReader,
   run,
@@ -80,9 +81,14 @@ peek :: Reader Word8
 peek = R . lookAhead $ getParser byte
 
 -- | @bytes n@ reads and consumes the next n bytes.
-bytes :: Word8 -> Reader BS.ByteString
-bytes 0 = return BS.empty
-bytes n = BS.cons <$> byte <*> bytes (n-1)
+bytes :: Word8 -> Reader [Word8]
+bytes 0 = return []
+bytes n = (:) <$> byte <*> bytes (n-1)
+
+
+bytestring :: Word8 -> Reader BS.ByteString
+bytestring 0 = return BS.empty
+bytestring n = BS.cons <$> byte <*> bytestring (n-1)
 
 readerBind :: Reader a -> (a -> Reader b) -> Reader b
 readerBind (R pa) f = R (pa >>= \val ->

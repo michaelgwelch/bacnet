@@ -62,10 +62,10 @@ readSignedAP :: Reader Int32
 readSignedAP = fromIntegral <$> readSignedAP'
 
 readRealAP :: Reader Float
-readRealAP = runGet getFloat32be <$ readRealAPTag <*> bytes 4
+readRealAP = runGet getFloat32be <$ readRealAPTag <*> bytestring 4
 
 readDoubleAP :: Reader Double
-readDoubleAP = runGet getFloat64be <$ readDoubleAPTag <*> bytes 8
+readDoubleAP = runGet getFloat64be <$ readDoubleAPTag <*> bytestring 8
 
 readOctetStringAP :: Reader [Word8]
 readOctetStringAP = readOctetStringAPTag >>=
@@ -77,7 +77,7 @@ readStringAP =
   do
     t <- readStringAPTag
     sat (==0x00) -- encoding is 0x00 which is the value used to indicate UTF-8 (formerly ANSI X3.4)
-    bs <- bytes $ fromIntegral $ tagLength t - 1
+    bs <- bytestring $ fromIntegral $ tagLength t - 1
     return $ UTF8.toString bs
 
 readBitStringAP :: Reader BitString
@@ -110,7 +110,7 @@ foldbytes = BS.foldl (\acc w -> acc * 256 + fromIntegral w) 0
 --   length specified in the 'Tag', @t@, and returns the value obtained by applying
 --   @f@ to that ByteString.
 content :: (BS.ByteString -> a) -> Tag -> Reader a
-content f t = f <$> bytes (fromIntegral $ tagLength t)
+content f t = f <$> bytestring (fromIntegral $ tagLength t)
 
 foldsbytes :: BS.ByteString -> Int
 foldsbytes bs | BS.null bs = 0
