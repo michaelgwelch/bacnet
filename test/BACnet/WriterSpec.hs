@@ -120,6 +120,10 @@ spec =
         runW (writeOctetStringAP (replicate 65536 19)) `shouldBe`
           ([0x65, 0xFF, 0x00, 0x01, 0x00, 0x00] ++ replicate 65536 19)
 
+    describe "writeStringAP" $ do
+      it "writes [0x71, 0x00] for empty string" $
+        runW (writeStringAP "") `shouldBe` [0x71, 0x00]
+
     describe "writeDateAP" $
       it "writes [0xA4, 0x72, 0x04, 0x06, 0xFF] for Date 114 4 6 255" $
         runW (writeDateAP $ Date 114 4 6 255) `shouldBe` [0xA4, 0x72, 0x04, 0x06, 0xFF]

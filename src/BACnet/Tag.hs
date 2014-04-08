@@ -28,6 +28,7 @@ module BACnet.Tag
   writeRealAPTag,
   writeDoubleAPTag,
   writeOctetStringAPTag,
+  writeStringAPTag,
   writeDateAPTag,
   writeTimeAPTag,
   writeObjectIdentifierAPTag,
@@ -298,6 +299,16 @@ writeOctetStringAPTag len | len < 5 = WC.unsigned8 (0x60 + fromIntegral len)
                               WC.unsigned8 254 <>
                               WC.unsigned16 (fromIntegral len)
                           | otherwise = WC.unsigned8 0x65 <>
+                              WC.unsigned8 255 <>
+                              WC.unsigned32 len
+
+writeStringAPTag :: Word32 => WC.Writer
+writeStringAPTag len | len < 5 = WC.unsigned8 (0x70 + fromIntegral len)
+                          | len < 254 = WC.unsigned8 0x75 <> WC.unsigned8 (fromIntegral len)
+                          | len < 65535 = WC.unsigned8 0x75 <>
+                              WC.unsigned8 254 <>
+                              WC.unsigned16 (fromIntegral len)
+                          | otherwise = WC.unsigned8 0x75 <>
                               WC.unsigned8 255 <>
                               WC.unsigned32 len
 

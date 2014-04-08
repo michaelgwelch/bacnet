@@ -7,6 +7,7 @@ module BACnet.Writer
     writeRealAP,
     writeDoubleAP,
     writeOctetStringAP,
+    writeStringAP,
     writeDateAP,
     writeTimeAP,
     writeObjectIdentifierAP,
@@ -20,6 +21,7 @@ import Data.Bits
 import Data.Word
 import Data.Int
 import Prelude hiding (null)
+import qualified Data.ByteString.Lazy.UTF8 as UTF8
 
 writeNullAP :: Writer
 writeNullAP = writeNullAPTag
@@ -46,7 +48,11 @@ writeDoubleAP :: Double -> Writer
 writeDoubleAP = (writeDoubleAPTag <>) . double
 
 writeOctetStringAP :: [Word8] -> Writer
-writeOctetStringAP o = writeOctetStringAPTag (fromIntegral (length o)) <> bytes o
+writeOctetStringAP o = writeOctetStringAPTag (fromIntegral $ length o) <> bytes o
+
+writeStringAP :: String -> Writer
+writeStringAP s = writeStringAPTag (fromIntegral $ length s + 1) <>
+                  unsigned8 0x00 <> bytestring (UTF8.fromString s)
 
 writeDateAP :: Date -> Writer
 writeDateAP (Date y m dm dw) =

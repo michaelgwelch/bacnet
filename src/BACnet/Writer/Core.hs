@@ -17,6 +17,7 @@ module BACnet.Writer.Core
     real,
     double,
     bytes,
+    bytestring,
     mconcat,
   ) where
 
@@ -59,6 +60,9 @@ signed16 = W . int16BE
 
 bytes :: [Word8] -> Writer
 bytes ws = W $ lazyByteString $ BS.pack ws
+
+bytestring :: BS.ByteString -> Writer
+bytestring bs = W $ lazyByteString bs
 
 real :: Float -> Writer
 real = W . floatBE
