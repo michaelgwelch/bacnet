@@ -19,6 +19,7 @@ import qualified Data.Bits as B
 
 newtype CharacterString = CharacterString { getString :: String }
 newtype OctetString = OctetString { getOSBytes :: [Word8] }
+  deriving (Eq, Show)
 data BitString = BitString { getUnusedBits :: Word8, getBSBytes :: [Word8] }
   deriving (Eq, Show)
 
