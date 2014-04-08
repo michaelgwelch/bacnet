@@ -49,15 +49,15 @@ instance Encodable Int32 where
   bacnetDecode = readSignedAP
 
 instance Encodable Float where
-  bacnetEncode = undefined
+  bacnetEncode = writeRealAP
   bacnetDecode = readRealAP
 
 instance Encodable Double where
-  bacnetEncode = undefined
+  bacnetEncode = writeDoubleAP
   bacnetDecode = readDoubleAP
 
 instance Encodable OctetString where
-  bacnetEncode = undefined
+  bacnetEncode = writeOctetStringAP . getOSBytes
   bacnetDecode = OctetString <$> readOctetStringAP
 
 instance Encodable CharacterString where

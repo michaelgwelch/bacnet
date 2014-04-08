@@ -9,6 +9,7 @@ import BACnet.Prim
 import Data.Word (Word32)
 import Data.Int (Int32)
 import Control.Applicative
+import Control.Monad
 
 class (Eq a, Show a, Encodable a) => RoundTrippable a where
   roundTrip :: a -> Expectation
@@ -17,22 +18,30 @@ class (Eq a, Show a, Encodable a) => RoundTrippable a where
 instance RoundTrippable Bool
 instance RoundTrippable Word32
 instance RoundTrippable Int32
+instance RoundTrippable Float
+instance RoundTrippable Double
+instance RoundTrippable OctetString
 
 instance RoundTrippable Date
 instance RoundTrippable Time
 instance RoundTrippable ObjectIdentifier
 
-instance Arbitrary Date where
-  arbitrary = Date <$> arbitrarySizedIntegral <*> arbitrarySizedIntegral
-                   <*> arbitrarySizedIntegral <*> arbitrarySizedIntegral
+instance Arbitrary OctetString where
+  arbitrary = OctetString <$> arbitrary
+  shrink = map OctetString . shrink . getOSBytes
 
+instance Arbitrary Date where
+  arbitrary = liftM4 Date arbitrary arbitrary arbitrary arbitrary
+
+-- This could be implemented just like Date, but again, I'm just
+-- playing around with different styles.
 instance Arbitrary Time where
-  arbitrary = Time <$> arbitrarySizedIntegral <*> arbitrarySizedIntegral
-                   <*> arbitrarySizedIntegral <*> arbitrarySizedIntegral
+  arbitrary = Time <$> arbitrary <*> arbitrary
+                   <*> arbitrary <*> arbitrary
 
 instance Arbitrary ObjectIdentifier where
-  arbitrary = ObjectIdentifier <$> arbitrarySizedIntegral
-  shrink = fmap ObjectIdentifier <$> shrinkIntegral . getRawValue
+  arbitrary = ObjectIdentifier <$> arbitrary
+  shrink = map ObjectIdentifier . shrink . getRawValue
 
 
 spec :: Spec
@@ -49,6 +58,19 @@ spec =
     describe "Encodable Int32" $
       it "round trips" $
         property $ \i -> roundTrip (i :: Int32)
+
+    describe "Encodable Real" $
+      it "round trips" $
+        property $ \f -> roundTrip (f :: Float)
+
+    describe "Encodable Double" $
+      it "round trips" $
+        property $ \d -> roundTrip (d :: Double)
+
+    describe "Encodable OctetString" $
+      it "round trips" $
+        property $ \s -> roundTrip (s :: OctetString)
+
 
     describe "Encodable Date" $
       it "round trips" $
