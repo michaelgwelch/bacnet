@@ -7,6 +7,7 @@ module BACnet.Encodable
 
 import BACnet.Writer.Core
 import qualified BACnet.Writer.Core as WC
+import BACnet.Writer
 import BACnet.Reader.Core
 import BACnet.Reader
 import BACnet.Prim
@@ -18,6 +19,8 @@ import Data.Word
 class Encodable a where
   bacnetEncode :: a -> Writer
   bacnetDecode :: Reader a
+
+
 
 instance Encodable a => Encodable [a] where
   bacnetEncode = mconcat . map bacnetEncode
@@ -34,16 +37,16 @@ instance (Encodable a, Encodable b) => Encodable (Either a b) where
   bacnetDecode = try (Left <$> bacnetDecode) <|> (Right <$> bacnetDecode)
 
 instance Encodable Bool where
-  bacnetEncode = undefined
+  bacnetEncode = writeBoolAP
   bacnetDecode = readBoolAP
 
-instance Encodable Word where
-  bacnetEncode = undefined
-  bacnetDecode = fromIntegral <$> readUnsignedAP
+instance Encodable Word32 where
+  bacnetEncode = writeUnsignedAP
+  bacnetDecode = readUnsignedAP
 
-instance Encodable Int where
-  bacnetEncode = undefined
-  bacnetDecode = fromIntegral <$> readSignedAP
+instance Encodable Int32 where
+  bacnetEncode = writeSignedAP
+  bacnetDecode = readSignedAP
 
 instance Encodable Float where
   bacnetEncode = undefined
@@ -70,11 +73,11 @@ instance Encodable Enumerated where
   bacnetDecode = readEnumeratedAP
 
 instance Encodable Date where
-  bacnetEncode = undefined
+  bacnetEncode = writeDateAP
   bacnetDecode = readDateAP
 
 instance Encodable Time where
-  bacnetEncode = undefined
+  bacnetEncode = writeTimeAP
   bacnetDecode = readTimeAP
 
 instance Encodable ObjectIdentifier where

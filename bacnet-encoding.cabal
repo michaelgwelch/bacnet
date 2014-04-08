@@ -51,10 +51,10 @@ cabal-version:       >=1.10
 
 library
   -- Modules exported by the library.
-  exposed-modules:     BACnet.Reader
+  exposed-modules:     BACnet.Reader, BACnet.Writer, BACnet.Encodable
 
   -- Modules included in this library but not exported.
-  other-modules:       BACnet.Tag.Core, BACnet.Encodable,
+  other-modules:       BACnet.Tag.Core, 
                        BACnet.Reader.Core, BACnet.Writer.Core,
                        BACnet.WriterT
 
