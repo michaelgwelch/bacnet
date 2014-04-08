@@ -124,6 +124,9 @@ spec =
       it "writes [0x71, 0x00] for empty string" $
         runW (writeStringAP "") `shouldBe` [0x71, 0x00]
 
+      it "writes [0x73, 0x00, 0x48, 0x49] for \"HI\"" $
+        runW (writeStringAP "HI") `shouldBe` [0x73, 0x00, 0x48, 0x49]
+
     describe "writeDateAP" $
       it "writes [0xA4, 0x72, 0x04, 0x06, 0xFF] for Date 114 4 6 255" $
         runW (writeDateAP $ Date 114 4 6 255) `shouldBe` [0xA4, 0x72, 0x04, 0x06, 0xFF]
