@@ -6,8 +6,10 @@ module BACnet.Writer
     writeSignedAP,
     writeRealAP,
     writeDoubleAP,
+    writeOctetStringAP,
     writeDateAP,
     writeTimeAP,
+    writeObjectIdentifierAP,
     runW
   ) where
 
@@ -38,10 +40,13 @@ writeIntegral tagWriter n =
   in tagWriter len <> bytes bs
 
 writeRealAP :: Float -> Writer
-writeRealAP f = writeRealAPTag <> real f
+writeRealAP = (writeRealAPTag <>) . real
 
 writeDoubleAP :: Double -> Writer
-writeDoubleAP d = writeDoubleAPTag <> double d
+writeDoubleAP = (writeDoubleAPTag <>) . double
+
+writeOctetStringAP :: [Word8] -> Writer
+writeOctetStringAP o = writeOctetStringAPTag (fromIntegral (length o)) <> bytes o
 
 writeDateAP :: Date -> Writer
 writeDateAP (Date y m dm dw) =
@@ -50,3 +55,6 @@ writeDateAP (Date y m dm dw) =
 writeTimeAP :: Time -> Writer
 writeTimeAP (Time h m s hs) =
   writeTimeAPTag <> unsigned8 h <> unsigned8 m <> unsigned8 s <> unsigned8 hs
+
+writeObjectIdentifierAP :: ObjectIdentifier -> Writer
+writeObjectIdentifierAP = (writeObjectIdentifierAPTag <>) . unsigned32 . getRawValue

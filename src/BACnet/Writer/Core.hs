@@ -11,6 +11,7 @@ module BACnet.Writer.Core
     null,
     unsigned8,
     unsigned16,
+    unsigned32,
     signed8,
     signed16,
     real,
@@ -21,9 +22,9 @@ module BACnet.Writer.Core
 
 import qualified Data.ByteString.Lazy as BS
 import Data.ByteString.Lazy.Builder (
-  word8, word16BE, int8, int16BE, lazyByteString, toLazyByteString,
+  word8, word16BE, word32BE, int8, int16BE, lazyByteString, toLazyByteString,
   Builder, floatBE, doubleBE)
-import Data.Word (Word8, Word16)
+import Data.Word (Word8, Word16, Word32)
 import Data.Int (Int8, Int16)
 import Data.Monoid (Monoid, (<>), mempty, mappend, mconcat)
 import Prelude hiding (null, maybe)
@@ -46,6 +47,9 @@ unsigned8 = W . word8
 
 unsigned16 :: Word16 -> Writer
 unsigned16 = W . word16BE
+
+unsigned32 :: Word32 -> Writer
+unsigned32 = W . word32BE
 
 signed8 :: Int8 -> Writer
 signed8 = W . int8
