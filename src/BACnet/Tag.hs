@@ -292,25 +292,21 @@ writeRealAPTag = WC.unsigned8 0x44
 writeDoubleAPTag :: WC.Writer
 writeDoubleAPTag = WC.unsigned16 0x5508
 
-writeOctetStringAPTag :: Word32 => WC.Writer
-writeOctetStringAPTag len | len < 5 = WC.unsigned8 (0x60 + fromIntegral len)
-                          | len < 254 = WC.unsigned8 0x65 <> WC.unsigned8 (fromIntegral len)
-                          | len < 65535 = WC.unsigned8 0x65 <>
-                              WC.unsigned8 254 <>
-                              WC.unsigned16 (fromIntegral len)
-                          | otherwise = WC.unsigned8 0x65 <>
-                              WC.unsigned8 255 <>
-                              WC.unsigned32 len
+writeOctetStringAPTag :: Word32 -> WC.Writer
+writeOctetStringAPTag = writeAPTag 0x60
 
-writeStringAPTag :: Word32 => WC.Writer
-writeStringAPTag len | len < 5 = WC.unsigned8 (0x70 + fromIntegral len)
-                          | len < 254 = WC.unsigned8 0x75 <> WC.unsigned8 (fromIntegral len)
-                          | len < 65535 = WC.unsigned8 0x75 <>
-                              WC.unsigned8 254 <>
-                              WC.unsigned16 (fromIntegral len)
-                          | otherwise = WC.unsigned8 0x75 <>
-                              WC.unsigned8 255 <>
-                              WC.unsigned32 len
+writeStringAPTag :: Word32 -> WC.Writer
+writeStringAPTag = writeAPTag 0x70
+
+writeAPTag :: Word8 -> Word32 -> WC.Writer
+writeAPTag tn len | len < 5 = WC.unsigned8 (tn + fromIntegral len)
+                  | len < 254 = WC.unsigned8 (tn + 5) <> WC.unsigned8 (fromIntegral len)
+                  | len < 65535 = WC.unsigned8 (tn + 5) <>
+                      WC.unsigned8 254 <>
+                      WC.unsigned16 (fromIntegral len)
+                  | otherwise = WC.unsigned8 (tn + 5) <>
+                      WC.unsigned8 255 <>
+                      WC.unsigned32 len
 
 writeDateAPTag :: WC.Writer
 writeDateAPTag = WC.unsigned8 0xA4
