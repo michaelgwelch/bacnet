@@ -12,7 +12,11 @@ configureTest:
 lint:
 	hlint .
 
+clean:
+	cabal clean
+
 .PHONY: test
 .PHONY: configure
 .PHONY: confgiureTest
 .PHONY: lint
+.PHONY: clean
