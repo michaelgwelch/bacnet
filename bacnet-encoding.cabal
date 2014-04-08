@@ -16,7 +16,9 @@ version:             0.1.0.0
 synopsis:            A library for encoding BACnet data
 
 -- A longer description of the package.
--- description:
+description:         This library is an implementation of binary
+                     readers and writers suitable for encoding
+                     BACnet data.
 
 -- URL for the project homepage or repository.
 homepage:            https://github.com/michaelgwelch/bacnet
@@ -88,3 +90,8 @@ Test-Suite tests
                        contravariant >=0.4.4 && <0.5
 
   default-language:    Haskell2010
+
+source-repository head
+  type:              git
+  location:          https://github.com/michaelgwelch/bacnet
+
