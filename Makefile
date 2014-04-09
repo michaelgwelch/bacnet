@@ -18,6 +18,9 @@ clean:
 dump-imports:
 	cabal build --ghc-option=-ddump-minimal-imports
 
+docs:
+	cabal haddock --hyperlink-source
+
 .PHONY: test
 .PHONY: configure
 .PHONY: confgiureTest
