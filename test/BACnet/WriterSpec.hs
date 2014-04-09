@@ -5,6 +5,9 @@ import Test.QuickCheck
 import BACnet.Prim
 import BACnet.Writer
 import Numeric.Limits
+import Data.Functor ((<$>))
+import BACnet.EncodableSpec
+import Data.Monoid
 
 spec :: Spec
 spec =
@@ -143,3 +146,36 @@ spec =
       it "writes [0xC4, 0x01, 0x00, 0x00, 0xFF] for ObjectIdentifier 4 255" $
         runW (writeObjectIdentifierAP $ objectIdentifier 4 255) `shouldBe`
           [0xC4, 0x01, 0x00, 0x00, 0xFF]
+
+    describe "Writer" $
+      context "Is a Monoid" $ do
+        it "obeys the law mempty <> writer = writer" $
+          property $ \w -> mempty <> w == (w :: Writer)
+
+        it "obeys the law writer <> mempty = writer" $
+          property $ \w -> w <> mempty == (w :: Writer)
+
+        it "is associative" $
+          property $ \x y z -> (x <> y) <> (z :: Writer) == x <> (y <> z)
+
+
+
+
+
+
+
+
+instance Arbitrary Writer where
+  arbitrary = oneof [
+    return writeNullAP,
+    writeBoolAP <$> arbitrary,
+    writeUnsignedAP <$> arbitrary,
+    writeSignedAP <$> arbitrary,
+    writeRealAP <$> arbitrary,
+    writeDoubleAP <$> arbitrary,
+    writeOctetStringAP <$> arbitrary,
+    writeStringAP <$> arbitrary,
+    writeDateAP <$> arbitrary,
+    writeTimeAP <$> arbitrary,
+    writeObjectIdentifierAP <$> arbitrary
+    ]
