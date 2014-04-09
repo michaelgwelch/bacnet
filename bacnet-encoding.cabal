@@ -53,11 +53,11 @@ cabal-version:       >=1.10
 
 library
   -- Modules exported by the library.
-  exposed-modules:     BACnet.Reader, BACnet.Writer, BACnet.Encodable
+  exposed-modules:     BACnet.Reader, BACnet.Writer, BACnet.Encodable,
+                       BACnet.Reader.Core, BACnet.Writer.Core, BACnet.Prim
 
   -- Modules included in this library but not exported.
-  other-modules:       BACnet.Tag.Core, 
-                       BACnet.Reader.Core, BACnet.Writer.Core,
+  other-modules:       BACnet.Tag.Core,
                        BACnet.WriterT
 
   -- LANGUAGE extensions used by modules in this package.
@@ -91,7 +91,20 @@ Test-Suite tests
 
   default-language:    Haskell2010
 
+Test-Suite doctests
+  type:                exitcode-stdio-1.0
+  main-is:             doctests.hs
+  ghc-options:         -threaded
+  build-depends:       base >=4.6 && <4.7, bytestring >=0.10 && <0.11, hspec >=1.8 && <1.9,
+                       QuickCheck >=2.6 && <2.7, hspec-expectations >=0.5 && <0.6,
+                       HUnit >=1.2 && <1.3, binary >=0.5 && <0.6,
+                       data-binary-ieee754 >=0.4.4 && <0.5,
+                       parsec >=3.1 && <3.2, transformers >=0.3 && <0.4,
+                       numeric-limits >=0.1.0 && <0.2,
+                       utf8-string >=0.3.7 && <0.4,
+                       contravariant >=0.4.4 && <0.5, doctest >=0.9.11 && <0.10
+  default-language:    Haskell2010
+
 source-repository head
   type:              git
   location:          https://github.com/michaelgwelch/bacnet
-
