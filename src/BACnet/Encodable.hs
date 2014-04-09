@@ -11,6 +11,7 @@ import BACnet.Reader
 import BACnet.Prim
 import Data.Int
 import Data.Word
+import Control.Applicative
 
 
 class Encodable a where

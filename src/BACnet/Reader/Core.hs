@@ -1,26 +1,58 @@
 {-# LANGUAGE FlexibleInstances, MultiParamTypeClasses #-}
 -- | Provides the primitives necessary for building readers of
---   'BS.ByteString' or ['Word8'] data
+--   'BS.ByteString' or ['Word8'] data.
+-- A reader attempts to read from an input stream. The reader can succeed
+-- or fail depending on the input stream.
+--
+-- There are serval functions
+-- that can be used to run a reader: 'run', 'runR', 'runS'. They differ
+-- in what input they take, and in how they handle failure. For example,
+-- 'runR' returns an @Either ParserError a@ so that it can return failure
+-- information or the result. The function 'run' expects the reader to
+-- succeed and throws an error if it fails. It's primarily meant for testing.
+--
+-- The simplest
+-- readers are 'sat', 'byte', 'bytes', 'bytestring', 'peek'.
+--
+-- Here are some examples that
+-- show how to use the simplest readers.
+--
+-- >>> import Data.ByteString.Lazy as BS
+-- >>> runR byte (BS.pack [0x23, 0x34])
+-- Right 35
+--
+-- >>> runR (sat (==0)) (BS.pack [0x23, 0x34])
+-- Left (line 1, column 1):
+-- unexpected 0x23
+--
+-- If you expect your readers to always succeed you can use 'run' instead
+-- of 'runR'. However, an error is thrown if the reading is not successful.
+-- The 'run' function also differs in how the input is given. It expects a
+-- ['Word8'] instead of a 'BS.ByteString'
+--
+-- >>> run byte [10, 20]
+-- 10
+--
+-- >>> run (sat (==0)) [0x23]
+-- *** Exception: (line 1, column 1):
+-- unexpected 0x23
 module BACnet.Reader.Core
   (
   Reader,
+  run,
+  runR,
+  runS,
   peek,
   byte,
   bytes,
   bytestring,
   sat,
-  -- runReader,
-  run,
-  (Ap.<|>),
-  Ap.many,
   try,
-  (<$>)
   ) where
 
 import qualified Data.ByteString.Lazy as BS
 import Data.Word
-import Control.Applicative hiding ((<|>))
-import qualified Control.Applicative as Ap
+import Control.Applicative
 import Control.Monad
 import Text.Parsec.Prim hiding (try)
 import qualified Text.Parsec.Prim as Pr
@@ -28,7 +60,7 @@ import Text.Parsec.Error
 import Text.Parsec.Pos
 import Numeric
 
--- | Reader is a parser of BACnet encoded binary data
+-- | @Reader a@ is a type of parser with return type of @a@.
 newtype Reader a = R { getParser :: Parsec BS.ByteString () a }
 
 right :: Either ParseError b -> b
@@ -40,10 +72,28 @@ right (Left err) = error $ show err
 --   is thrown giving the location of the error and the unexpected 'Word8'
 --   value
 run :: Reader a -> [Word8] -> a
-run r ws = right $ runR r (BS.pack ws)
+run r = right . runR r . BS.pack
 
+-- | Runs the specified reader on the given input. It returns the
+--   result in an @Either ParserError a@
 runR :: Reader a -> BS.ByteString -> Either ParseError a
 runR (R p) = parse p ""
+
+returnStream :: Parsec BS.ByteString () a -> Parsec BS.ByteString() (a, BS.ByteString)
+returnStream p =
+  do
+    val <- p
+    s <- getParserState
+    return (val, stateInput s)
+
+-- | Like 'run' it runs the specified reader with the given list of bytes.
+--   If it succeeds it return the leftover input as part of the return value.
+runS :: Reader a -> [Word8] -> Either ParseError (a, [Word8])
+runS (R p) inp =
+  case runR (R (returnStream p)) (BS.pack inp) of
+    Right (v, bs) -> Right (v, BS.unpack bs)
+    Left pe -> Left pe
+
 
 instance (Monad m) => Stream BS.ByteString m Word8 where
   uncons = return . BS.uncons
@@ -56,17 +106,27 @@ updatePosWord8 pos b
 --   @f@ returns 'True'. Returns the byte that is actually read.
 sat :: (Word8 -> Bool) -> Reader Word8
 sat p =
-  R (tokenPrim showByte nextPos textByte)
+  R (tokenPrim showByte nextPos testByte)
   where
     showByte = ("0x"++) . flip showHex ""
     nextPos p b _ = updatePosWord8 p b
-    textByte b = if p b then Just b else Nothing
+    testByte b = if p b then Just b else Nothing
 
 -- | This reader succeeds for any byte that is read. Returns the read byte.
 byte :: Reader Word8
 byte = sat (const True)
 
--- | @peek@ reads a byte and returns it without consuming any input
+-- | @peek@ reads a byte and returns it without consuming any input.
+-- The following examples use 'runS' which if the reading is successful
+-- returns the remaing list of bytes as part of the result.
+--
+-- >>> runS peek [0, 1, 2]
+-- Right (0,[0,1,2])
+--
+-- This differs from 'byte' which consumes input like so:
+--
+-- >>> runS byte [0, 1, 2]
+-- Right (0,[1,2])
 peek :: Reader Word8
 peek = R . lookAhead $ getParser byte
 
