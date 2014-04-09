@@ -9,7 +9,7 @@ module BACnet.Reader.Core
   bytes,
   bytestring,
   sat,
-  runReader,
+  -- runReader,
   run,
   (Ap.<|>),
   Ap.many,
@@ -18,7 +18,6 @@ module BACnet.Reader.Core
   ) where
 
 import qualified Data.ByteString.Lazy as BS
-import Data.Functor.Identity
 import Data.Word
 import Control.Applicative hiding ((<|>))
 import qualified Control.Applicative as Ap
@@ -45,15 +44,6 @@ run r ws = right $ runR r (BS.pack ws)
 
 runR :: Reader a -> BS.ByteString -> Either ParseError a
 runR (R p) = parse p ""
-
-runReader :: Reader a -> [Word8] -> Maybe(a, [Word8])
-runReader (R p) bs =
-  let parser = (p >>= \val ->
-                getParserState >>= \s ->
-                return (val, BS.unpack $ stateInput s)) in
-  case parse parser "" (BS.pack bs) of
-                      (Left _) -> Nothing
-                      (Right x) -> Just x
 
 instance (Monad m) => Stream BS.ByteString m Word8 where
   uncons = return . BS.uncons
@@ -95,7 +85,7 @@ readerBind (R pa) f = R (pa >>= \val ->
                          let (R pb) = f val in pb)
 
 try :: Reader a -> Reader a
-try (R pa) = R (Pr.try pa)
+try = R . Pr.try . getParser
 
 instance Monad Reader where
   fail _ = R $ parserFail ""

@@ -2,7 +2,7 @@
 module BACnet.Reader
   (
     Reader,
-    runReader,
+    -- runReader,
     run,
     readNullAP,
     readBoolAP,
@@ -24,13 +24,11 @@ import Control.Monad
 import Data.Binary
 import Data.Binary.Get
 import Data.Binary.IEEE754
-import Data.Word
 import Data.Int
 import BACnet.Tag
 import BACnet.Reader.Core
 import BACnet.Prim
 import qualified BACnet.Prim as Pr
-import Data.ByteString.Lazy hiding (foldl)
 import qualified Data.ByteString.Lazy as BS
 import qualified Data.ByteString.Lazy.UTF8 as UTF8
 

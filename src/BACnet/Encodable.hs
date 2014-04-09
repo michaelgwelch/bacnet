@@ -11,7 +11,6 @@ import BACnet.Writer
 import BACnet.Reader.Core
 import BACnet.Reader
 import BACnet.Prim
-import Control.Applicative ((<$>), (<*>))
 import Data.Int
 import Data.Word
 

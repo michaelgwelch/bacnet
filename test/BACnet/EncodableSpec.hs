@@ -26,6 +26,10 @@ instance RoundTrippable Date
 instance RoundTrippable Time
 instance RoundTrippable ObjectIdentifier
 
+instance RoundTrippable a => RoundTrippable [a]
+instance RoundTrippable a => RoundTrippable (Maybe a)
+instance (RoundTrippable a, RoundTrippable b) => RoundTrippable (Either a b)
+
 instance Arbitrary OctetString where
   arbitrary = OctetString <$> arbitrary
   shrink = map OctetString . shrink . getOSBytes
@@ -54,6 +58,18 @@ spec =
     describe "Encodable Word32" $
       it "round trips" $
         property $ \w -> roundTrip (w :: Word32)
+
+    describe "Encodable [Word32]" $
+      it "round trips" $
+        property $ \ws -> roundTrip (ws :: [Word32])
+
+    describe "Encodable (Maybe Word32)" $
+      it "round trips" $
+        property $ \mw -> roundTrip (mw :: Maybe Word32)
+
+    describe "Encodable (Either Word32 Int32)" $
+      it "round trips" $
+        property $ \e -> roundTrip (e :: Either Word32 Int32)
 
     describe "Encodable Int32" $
       it "round trips" $

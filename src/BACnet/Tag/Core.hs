@@ -10,7 +10,6 @@ module BACnet.Tag.Core (
   tagNumber,
   ) where
 
-import Control.Exception
 import Data.Word
 import Data.Bits
 

@@ -30,9 +30,7 @@ import Data.Int (Int8, Int16)
 import Data.Monoid (Monoid, (<>), mempty, mappend, mconcat)
 import Prelude hiding (null, maybe)
 import qualified Prelude as P
-import Data.Bits ((.&.))
-import qualified Control.Applicative as A
-import qualified Control.Monad as M
+
 
 -- | A writer. All of the BACnet writers are this type. Writers
 --   can be combined together to form more complex writers using

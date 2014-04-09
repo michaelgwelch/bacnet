@@ -7,7 +7,7 @@ configure:
 	cabal configure
 
 configureTest:
-	cabal configure --enable-tests 
+	cabal configure --enable-tests
 
 lint:
 	hlint .
@@ -15,8 +15,12 @@ lint:
 clean:
 	cabal clean
 
+dump-imports:
+	cabal build --ghc-option=-ddump-minimal-imports
+
 .PHONY: test
 .PHONY: configure
 .PHONY: confgiureTest
 .PHONY: lint
 .PHONY: clean
+.PHONY: dump-imports
