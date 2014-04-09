@@ -1,8 +1,6 @@
 module BACnet.Encodable
   (
-  Encodable,
-  bacnetEncode,
-  bacnetDecode,
+  Encodable(..),
   ) where
 
 import BACnet.Writer.Core
@@ -68,7 +66,7 @@ instance Encodable BitString where
   bacnetDecode = readBitStringAP
 
 instance Encodable Enumerated where
-  bacnetEncode = undefined
+  bacnetEncode = writeEnumeratedAP
   bacnetDecode = readEnumeratedAP
 
 instance Encodable Date where
