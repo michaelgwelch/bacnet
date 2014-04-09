@@ -1,3 +1,7 @@
+-- | Core Writer
+--   Writer is a Monoid
+--
+-- prop> (runW $ mempty <> (unsigned8 b)) == (runW (unsigned8 b))
 module BACnet.Writer.Core
   (
     Writer,
