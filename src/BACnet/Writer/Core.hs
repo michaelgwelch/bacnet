@@ -37,6 +37,12 @@ import qualified Prelude as P
 --   'mappend' or the equivalent operator ('<>')
 newtype Writer = W { unWriter :: Builder }
 
+instance Eq Writer where
+  w1 == w2 = runW w1 == runW w2
+
+instance Show Writer where
+  show = show . runW
+
 -- | A builder that writes the byte 0x00
 null :: Writer
 null = W $ word8 0x00
