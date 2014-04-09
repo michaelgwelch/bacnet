@@ -1,3 +1,10 @@
+-- | Defines writers of BACnet data.
+--   Writers are instances of 'Monoid' therefore the Monoid equalities hold.
+--   Here are some examples using (writeUnsignedAP b) as an example.
+--
+-- prop> mempty <> (writeUnsignedAP b) == writeUnsignedAP b
+-- prop> writeUnsignedAP b <> mempty == writeUnsignedAP b
+-- prop> let w = writeUnsignedAP in (w x <> w y) <> w z == w x <> (w y <> w z)
 module BACnet.Writer
   (
     Writer,
@@ -24,10 +31,20 @@ import Data.Word
 import Data.Int
 import Prelude hiding (null)
 import qualified Data.ByteString.Lazy.UTF8 as UTF8
+import Data.Monoid (mempty)
 
+-- | Writes an application encoded null value which is always @0x00@.
+--
+-- >>> runW writeNullAP
+-- [0]
 writeNullAP :: Writer
 writeNullAP = writeNullAPTag
 
+-- | Writes an application encoded boolean value which is either 0x10 (False),
+--   or 0x11 (True).
+--
+-- >>> runW $ writeBoolAP True
+-- [17]
 writeBoolAP :: Bool -> Writer
 writeBoolAP = writeBoolAPTag
 
