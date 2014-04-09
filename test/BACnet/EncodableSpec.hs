@@ -22,6 +22,7 @@ instance RoundTrippable Float
 instance RoundTrippable Double
 instance RoundTrippable OctetString
 
+instance RoundTrippable Enumerated
 instance RoundTrippable Date
 instance RoundTrippable Time
 instance RoundTrippable ObjectIdentifier
@@ -33,6 +34,9 @@ instance (RoundTrippable a, RoundTrippable b) => RoundTrippable (Either a b)
 instance Arbitrary OctetString where
   arbitrary = OctetString <$> arbitrary
   shrink = map OctetString . shrink . getOSBytes
+
+instance Arbitrary Enumerated where
+  arbitrary = liftM Enumerated arbitrary
 
 instance Arbitrary Date where
   arbitrary = liftM4 Date arbitrary arbitrary arbitrary arbitrary
@@ -87,6 +91,9 @@ spec =
       it "round trips" $
         property $ \s -> roundTrip (s :: OctetString)
 
+    describe "Encodable Enumerated" $
+      it "round trips" $
+        property $ \e -> roundTrip (e :: Enumerated)
 
     describe "Encodable Date" $
       it "round trips" $
