@@ -1,5 +1,6 @@
 module BACnet.Writer
   (
+    Writer,
     writeNullAP,
     writeBoolAP,
     writeUnsignedAP,
@@ -8,6 +9,7 @@ module BACnet.Writer
     writeDoubleAP,
     writeOctetStringAP,
     writeStringAP,
+    writeEnumeratedAP,
     writeDateAP,
     writeTimeAP,
     writeObjectIdentifierAP,
@@ -53,6 +55,9 @@ writeOctetStringAP o = writeOctetStringAPTag (fromIntegral $ length o) <> bytes 
 writeStringAP :: String -> Writer
 writeStringAP s = writeStringAPTag (fromIntegral $ length s + 1) <>
                   unsigned8 0x00 <> bytestring (UTF8.fromString s)
+
+writeEnumeratedAP :: Enumerated -> Writer
+writeEnumeratedAP = writeIntegral writeEnumeratedAPTag . getEnumValue
 
 writeDateAP :: Date -> Writer
 writeDateAP (Date y m dm dw) =
