@@ -2,7 +2,6 @@
 module BACnet.Reader
   (
     Reader,
-    -- runReader,
     run,
     readNullAP,
     readBoolAP,

@@ -227,7 +227,8 @@ readerBind ra f = R parserB
             a <- getParser ra
             getParser $ f a
 
--- | Wraps the spec If the reader fails, then no input is consumed.
+-- | Attempts the specified reader. If the reader fails, then no input is consumed.
+--   Otherwise, it returns the read value as normal.
 try :: Reader a -> Reader a
 try = R . Pr.try . getParser
 

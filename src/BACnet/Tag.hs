@@ -47,7 +47,8 @@ import BACnet.Reader.Core
 import qualified Data.ByteString.Lazy as BS
 import Data.Bits
 import qualified BACnet.Writer.Core as WC
-import BACnet.Writer.Core ((<>), Writer)
+import BACnet.Writer.Core (Writer)
+import Data.Monoid
 
 data Tag =
           NullAP

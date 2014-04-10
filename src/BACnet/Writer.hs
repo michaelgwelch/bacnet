@@ -8,6 +8,7 @@
 module BACnet.Writer
   (
     Writer,
+    runW,
     writeNullAP,
     writeBoolAP,
     writeUnsignedAP,
@@ -21,7 +22,6 @@ module BACnet.Writer
     writeDateAP,
     writeTimeAP,
     writeObjectIdentifierAP,
-    runW
   ) where
 
 import BACnet.Prim
@@ -32,7 +32,7 @@ import Data.Word
 import Data.Int
 import Prelude hiding (null)
 import qualified Data.ByteString.Lazy.UTF8 as UTF8
-import Data.Monoid (mempty, Monoid)
+import Data.Monoid (mempty, Monoid, (<>))
 
 -- | Writes an application encoded null value which is always @0x00@.
 --

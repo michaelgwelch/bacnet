@@ -1,17 +1,8 @@
--- | Core Writer
---   Writer is a Monoid
---
--- prop> (runW $ mempty <> (unsigned8 b)) == (runW (unsigned8 b))
+-- | Defines the Writer type and a handful of primitive writers.
 module BACnet.Writer.Core
   (
     Writer,
     runW,
-    empty,
-
-    -- | Appends one writer to another
-    append,
-    -- | An infix synonym for 'append'
-    (<>),
     null,
     unsigned8,
     unsigned16,
@@ -22,7 +13,6 @@ module BACnet.Writer.Core
     double,
     bytes,
     bytestring,
-    mconcat,
   ) where
 
 import qualified Data.ByteString.Lazy as BS
@@ -47,25 +37,31 @@ instance Eq Writer where
 instance Show Writer where
   show = show . runW
 
--- | A builder that writes the byte 0x00
+-- | A writer that writes the byte 0x00
 null :: Writer
 null = W $ word8 0x00
 
+-- | A function that writes a 'Word8' value.
 unsigned8 :: Word8 -> Writer
 unsigned8 = W . word8
 
+-- | A function that writes a 'Word16' value
 unsigned16 :: Word16 -> Writer
 unsigned16 = W . word16BE
 
+-- | A function that writes a 'Word32' value
 unsigned32 :: Word32 -> Writer
 unsigned32 = W . word32BE
 
+-- | A function that writes an Int8 value.
 signed8 :: Int8 -> Writer
 signed8 = W . int8
 
+-- | A function that writes an Int16 value.
 signed16 :: Int16 -> Writer
 signed16 = W . int16BE
 
+-- | A function that writes a list of 'Word8' values.
 bytes :: [Word8] -> Writer
 bytes = W . lazyByteString . BS.pack
 

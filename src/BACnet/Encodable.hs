@@ -12,6 +12,7 @@ import BACnet.Prim
 import Data.Int
 import Data.Word
 import Control.Applicative
+import Data.Monoid (mempty, mconcat)
 
 
 class Encodable a where
@@ -25,7 +26,7 @@ instance Encodable a => Encodable [a] where
   bacnetDecode = many bacnetDecode
 
 instance Encodable a => Encodable (Maybe a) where
-  bacnetEncode Nothing = WC.empty
+  bacnetEncode Nothing = mempty
   bacnetEncode (Just v) = bacnetEncode v
   bacnetDecode = try (Just <$> bacnetDecode) <|> return Nothing
 
