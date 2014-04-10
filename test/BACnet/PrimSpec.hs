@@ -4,12 +4,13 @@ import Test.Hspec
 import Test.QuickCheck
 import BACnet.Prim
 import Control.Exception (evaluate)
+import Data.Maybe (fromJust)
 
 spec =
 
     describe "testBit" $ do
       context "when given (BitString 0 [0xF0])" $ do
-        let bs = bitString 0 [0xF0]
+        let bs = fromJust $ bitString 0 [0xF0]
 
         it "returns True for bit position 0" $
           testBit bs 0 `shouldBe` True
@@ -28,7 +29,7 @@ spec =
           property $ \n -> evaluate (testBit empty n) `shouldThrow` anyErrorCall
 
       context "when given (BitString 3 [0x00, 0x88])" $ do
-        let bs = bitString 3 [0x00, 0x88]
+        let bs = fromJust $ bitString 3 [0x00, 0x88]
 
         it "gives an error for pit position 13" $
           evaluate (testBit bs 13) `shouldThrow` anyErrorCall

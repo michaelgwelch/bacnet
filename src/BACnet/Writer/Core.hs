@@ -67,10 +67,10 @@ signed16 :: Int16 -> Writer
 signed16 = W . int16BE
 
 bytes :: [Word8] -> Writer
-bytes ws = W $ lazyByteString $ BS.pack ws
+bytes = W . lazyByteString . BS.pack
 
 bytestring :: BS.ByteString -> Writer
-bytestring bs = W $ lazyByteString bs
+bytestring = W . lazyByteString
 
 real :: Float -> Writer
 real = W . floatBE

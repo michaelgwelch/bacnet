@@ -16,6 +16,7 @@ module BACnet.Writer
     writeDoubleAP,
     writeOctetStringAP,
     writeStringAP,
+    writeBitStringAP,
     writeEnumeratedAP,
     writeDateAP,
     writeTimeAP,
@@ -31,7 +32,7 @@ import Data.Word
 import Data.Int
 import Prelude hiding (null)
 import qualified Data.ByteString.Lazy.UTF8 as UTF8
-import Data.Monoid (mempty)
+import Data.Monoid (mempty, Monoid)
 
 -- | Writes an application encoded null value which is always @0x00@.
 --
@@ -61,10 +62,10 @@ writeIntegral tagWriter n =
   in tagWriter len <> bytes bs
 
 writeRealAP :: Float -> Writer
-writeRealAP = (writeRealAPTag <>) . real
+writeRealAP f = writeRealAPTag <> real f
 
 writeDoubleAP :: Double -> Writer
-writeDoubleAP = (writeDoubleAPTag <>) . double
+writeDoubleAP d = writeDoubleAPTag <> double d
 
 writeOctetStringAP :: [Word8] -> Writer
 writeOctetStringAP o = writeOctetStringAPTag (fromIntegral $ length o) <> bytes o
@@ -72,6 +73,10 @@ writeOctetStringAP o = writeOctetStringAPTag (fromIntegral $ length o) <> bytes 
 writeStringAP :: String -> Writer
 writeStringAP s = writeStringAPTag (fromIntegral $ length s + 1) <>
                   unsigned8 0x00 <> bytestring (UTF8.fromString s)
+
+writeBitStringAP :: BitString -> Writer
+writeBitStringAP s = writeBitStringAPTag (fromIntegral $ bitStringLength s) <>
+                     unsigned8 (bitStringUnusedBits s) <> bytes (bitStringBytes s)
 
 writeEnumeratedAP :: Enumerated -> Writer
 writeEnumeratedAP = writeIntegral writeEnumeratedAPTag . getEnumValue

@@ -3,6 +3,9 @@ module BACnet.Prim
     CharacterString(..),
     OctetString(..),
     BitString,
+    bitStringUnusedBits,
+    bitStringBytes,
+    bitStringLength,
     bitString,
     empty,
     testBit,
@@ -15,20 +18,24 @@ module BACnet.Prim
 
 import Data.Word (Word8, Word16, Word32, Word)
 import Data.Bits (shiftR, shiftL, (.&.), (.|.))
+import Control.Monad (liftM, liftM2)
 import qualified Data.Bits as B
 
 newtype CharacterString = CharacterString { getString :: String }
 newtype OctetString = OctetString { getOSBytes :: [Word8] }
   deriving (Eq, Show)
-data BitString = BitString { getUnusedBits :: Word8, getBSBytes :: [Word8] }
+data BitString = BitString { bitStringUnusedBits :: Word8, bitStringBytes :: [Word8] }
   deriving (Eq, Show)
 
 empty :: BitString
 empty = BitString 0 []
 
-bitString :: Word8 -> [Word8] -> BitString
-bitString n bs | n < 8 = BitString n bs
-               | otherwise = error "invalid number of unused bits"
+bitString :: Word8 -> [Word8] -> Maybe BitString
+bitString n bs | null bs && n /= 0 || n >= 8 = Nothing
+               | n < 8                       = Just $ BitString n bs
+
+bitStringLength :: BitString -> Int
+bitStringLength bs = 1 + length (bitStringBytes bs)
 
 -- | The function @testBit b n@ returns true if the nth bit is set. Counting
 --   starts at 0 at the left most bit of the left most byte of 'getBytes'
@@ -63,16 +70,16 @@ data Time = Time
 newtype ObjectIdentifier = ObjectIdentifier { getRawValue :: Word32 }
   deriving (Show, Eq)
 
-objectIdentifier :: Word16 -> Word32 -> ObjectIdentifier
+objectIdentifier :: Word16 -> Word32 -> Maybe ObjectIdentifier
 objectIdentifier ot inum =
-  ObjectIdentifier rawValue
-  where rawValue = inum' + shiftL ot' 22
+  liftM ObjectIdentifier rawValue
+  where rawValue = liftM2 (+) inum' ot'
         inum'
-          | inum > 0x3FFFFF = error "invalid instance number > 0x3FFFFF"
-          | otherwise = inum
+          | inum > 0x3FFFFF = Nothing
+          | otherwise       = Just inum
         ot'
-          | ot > 0x3FF = error "invalid object type > 0x3FF"
-          | otherwise = fromIntegral ot
+          | ot > 0x3FF      = Nothing
+          | otherwise       = Just $ shiftL (fromIntegral ot) 22
 
 getObjectType :: ObjectIdentifier -> Word16
 getObjectType = fromIntegral . (.&. 0x3F) . flip shiftR 22 . getRawValue

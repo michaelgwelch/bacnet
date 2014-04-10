@@ -5,13 +5,11 @@ import Test.Hspec
 import Test.QuickCheck
 import BACnet.Reader
 import BACnet.Prim
+import Data.Maybe (fromJust)
 import Data.Word
 import Data.Int
 import Control.Exception (Exception, evaluate)
 import Numeric.Limits
-
-andReturn = shouldBe
-infix 1 `andReturn`
 
 isPosInfinite :: RealFloat a => a -> Bool
 isPosInfinite f = (f > 0) && isInfinite f
@@ -104,10 +102,10 @@ spec = do
       run readSignedAP [0x33, 0x7F, 0xFF, 0xFF] `shouldBe` 8388607
 
     it "reads [0x34, 0x00, 0x80, 0x00, 0x00] and returns 8388608" $
-      run readSignedAP [0x34, 0x00, 0x80, 0x00, 0x00] `andReturn` 8388608
+      run readSignedAP [0x34, 0x00, 0x80, 0x00, 0x00] `shouldBe` 8388608
 
     it "reads [0x34, 0x7F, 0xFF, 0xFF, 0xFF] and returns 2147483647" $
-      run readSignedAP [0x34, 0x7F, 0xFF, 0xFF, 0xFF] `andReturn` 2147483647
+      run readSignedAP [0x34, 0x7F, 0xFF, 0xFF, 0xFF] `shouldBe` 2147483647
 
     it "reads [0x31, 0xFF] and returns -1" $
       run readSignedAP [0x31, 0xFF] `shouldBe` -1
@@ -125,16 +123,16 @@ spec = do
       run readSignedAP [0x32, 0x80, 0x00] `shouldBe` -32768
 
     it "reads [0x33, 0xFF, 0x7F, 0xFF] and returns -32769" $
-      run readSignedAP [0x33, 0xFF, 0x7F, 0xFF] `andReturn` -32769
+      run readSignedAP [0x33, 0xFF, 0x7F, 0xFF] `shouldBe` -32769
 
     it "reads [0x33, 0x80, 0x00, 0x00] and returns -8388608" $
       run readSignedAP [0x33, 0x80, 0x00, 0x00] `shouldBe` (-8388608)
 
     it "reads [0x34, 0xFF, 0x7F, 0xFF, 0xFF] and returns -8388609" $
-      run readSignedAP [0x34, 0xFF, 0x7F, 0xFF, 0xFF] `andReturn` -8388609
+      run readSignedAP [0x34, 0xFF, 0x7F, 0xFF, 0xFF] `shouldBe` -8388609
 
     it "reads [x034, 0x80, 0x00, 0x00, 0x00] and returns -2147483648" $
-      run readSignedAP [0x34, 0x80, 0x00, 0x00, 0x00] `andReturn` -2147483648
+      run readSignedAP [0x34, 0x80, 0x00, 0x00, 0x00] `shouldBe` -2147483648
 
 
 
@@ -212,7 +210,7 @@ spec = do
       run readBitStringAP [0x80] `shouldThrow'` anyErrorCall
 
     it "reads [0x82 0x03 0xF7] and returns 'bitString 3 [0xF7]'" $
-      run readBitStringAP [0x82, 0x03, 0xF7] `shouldBe` bitString 3 [0xF7]
+      run readBitStringAP [0x82, 0x03, 0xF7] `shouldBe` (fromJust $ bitString 3 [0xF7])
 
   describe "readEnumeratedAP" $ do
     it "reads [0x91, 0x00] and returns 0" $
@@ -239,4 +237,4 @@ spec = do
   describe "readObjectIdentifierAP" $
     it "reads [0xC4, 0x00, 0xC0, 0x00, 0x0F] and returns objectIdentifier 3 15" $
       run readObjectIdentifierAP [0xc4, 0x00, 0xc0, 0x00, 0x0F] `shouldBe`
-        objectIdentifier 3 15
+        (fromJust $ objectIdentifier 3 15)

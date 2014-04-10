@@ -29,6 +29,7 @@ module BACnet.Tag
   writeDoubleAPTag,
   writeOctetStringAPTag,
   writeStringAPTag,
+  writeBitStringAPTag,
   writeEnumeratedAPTag,
   writeDateAPTag,
   writeTimeAPTag,
@@ -98,9 +99,6 @@ apUnsignedTag w | w <= fromIntegral (maxBound :: Word8) = UnsignedAP 1
                 | w <= fromIntegral (maxBound :: Word32) = UnsignedAP 4
                 | otherwise = undefined
 
-failure :: Reader a
-failure = fail ""
-
 const' :: a -> b -> c -> a
 const' = const . const
 
@@ -169,7 +167,7 @@ readObjectIdentifierAPTag :: Reader Tag
 readObjectIdentifierAPTag = sat (== 0xc4) >> return ObjectIdentifierAP
 
 readAP :: Word8 -> (Word32 -> Tag) -> Reader Tag
-readAP tn co = sat (\b -> TC.tagNumber b == tn && TC.isAP b) >>=
+readAP tn co = sat (\b -> TC.tagNumber b == tn && TC.isAP b && TC.lvt b <= 5) >>=
                (lengthOfContent >=> return . co)
 
 -- | @readCS tn pred co@ succeeds if tn matches the tag number that is read,
@@ -191,7 +189,7 @@ readCS tn p co
 lengthOfContent :: Word8 -> Reader Word32
 lengthOfContent b | TC.lvt b < 5 = return . fromIntegral $ TC.lvt b
                   | TC.lvt b == 5 = lengthOfContent'
-                  | otherwise = failure
+                  | otherwise = fail "Invalid length encoding"
 
 -- | Reads the next byte. If it is < 254 it returns that value
 --   If it is 254, then reads the next 2 bytes as a Word32
@@ -298,6 +296,9 @@ writeOctetStringAPTag = writeAPTag 0x60
 
 writeStringAPTag :: Word32 -> Writer
 writeStringAPTag = writeAPTag 0x70
+
+writeBitStringAPTag :: Word32 -> Writer
+writeBitStringAPTag = writeAPTag 0x80
 
 writeAPTag :: Word8 -> Word32 -> Writer
 writeAPTag tn len | len < 5 = WC.unsigned8 (tn + fromIntegral len)

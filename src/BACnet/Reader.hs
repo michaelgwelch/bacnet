@@ -25,6 +25,7 @@ import Data.Binary
 import Data.Binary.Get
 import Data.Binary.IEEE754
 import Data.Int
+import Data.Maybe
 import BACnet.Tag
 import BACnet.Reader.Core
 import BACnet.Prim
@@ -66,9 +67,11 @@ readDoubleAP :: Reader Double
 readDoubleAP = runGet getFloat64be <$ readDoubleAPTag <*> bytestring 8
 
 readOctetStringAP :: Reader [Word8]
-readOctetStringAP = readOctetStringAPTag >>=
-                    (content id >=>
-                     return . BS.unpack)
+readOctetStringAP =
+  do
+    t <- readOctetStringAPTag
+    bs <- content id t
+    return $ BS.unpack bs
 
 readStringAP :: Reader String
 readStringAP =
@@ -84,17 +87,17 @@ readBitStringAP =
     tag <- readBitStringAPTag
     guard (tagLength tag /= 0)
     bs <- content id tag
-    return $ if BS.null bs then Pr.empty
-             else bitString (BS.head bs) (BS.unpack $ BS.tail bs)
+    let bString = bitString (BS.head bs) (BS.unpack $ BS.tail bs)
+    maybe (fail "Invalid BitString encoding") (return) bString
 
 readEnumeratedAP :: Reader Enumerated
 readEnumeratedAP = Enumerated <$> (readEnumeratedAPTag >>= content foldbytes)
 
 readDateAP :: Reader Date
-readDateAP = Date <$> (readDateAPTag >> byte) <*> byte <*> byte <*> byte
+readDateAP = const Date <$> readDateAPTag <*> byte <*> byte <*> byte <*> byte
 
 readTimeAP :: Reader Time
-readTimeAP = liftM4 Time (readTimeAPTag >> byte) byte byte byte
+readTimeAP = const Time <$> readTimeAPTag <*> byte <*> byte <*> byte <*> byte
 
 readObjectIdentifierAP :: Reader ObjectIdentifier
 readObjectIdentifierAP = (ObjectIdentifier . fromIntegral) <$>

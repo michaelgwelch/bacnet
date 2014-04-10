@@ -1,10 +1,11 @@
 {-# LANGUAGE FlexibleInstances, MultiParamTypeClasses #-}
--- | Provides the primitives necessary for building readers of
+-- |
+-- Provides the primitives necessary for building readers of
 --   'BS.ByteString' or ['Word8'] data.
 -- A reader attempts to read from an input stream. The reader can succeed
 -- or fail depending on the input stream.
 --
--- There are serval functions
+-- There are several functions
 -- that can be used to run a reader: 'run', 'runR', 'runS'. They differ
 -- in what input they take, and in how they handle failure. For example,
 -- 'runR' returns an @Either ParserError a@ so that it can return failure
@@ -15,7 +16,7 @@
 -- readers are 'sat', 'byte', 'bytes', 'bytestring', 'peek'.
 --
 -- Here are some examples that
--- show how to use the simplest readers.
+-- show how to run these readers.
 --
 -- >>> import Data.ByteString.Lazy as BS
 -- >>> runR byte (BS.pack [0x23, 0x34])
@@ -26,7 +27,7 @@
 -- unexpected 0x23
 --
 -- If you expect your readers to always succeed you can use 'run' instead
--- of 'runR'. However, an error is thrown if the reading is not successful.
+-- of 'runR'. Recall, an error is thrown if the reading is not successful.
 -- The 'run' function also differs in how the input is given. It expects a
 -- ['Word8'] instead of a 'BS.ByteString'
 --
@@ -36,6 +37,83 @@
 -- >>> run (sat (==0)) [0x23]
 -- *** Exception: (line 1, column 1):
 -- unexpected 0x23
+--
+-- In some instances (testing, for example) it's nice to see how much of
+-- the input stream is left after running a 'Reader'. This can be done with
+-- 'runS'. In the following example 5 bytes are read and 5 are yet to be
+--  consumed.
+--
+-- >>> runS (bytes 5) [0,1,2,3,4,5,6,7,8,9]
+-- Right ([0,1,2,3,4],[5,6,7,8,9])
+--
+-- The 'Reader' type is an instance of several classes: 'Monad', 'Functor',
+-- 'MonadPlus', 'Applicative' and 'Alternative'.
+--
+-- The 'MonadPlus' instance will be described now. The function
+-- 'mzero' is defined to be a reader failure.
+--
+-- >>> run mzero [0x01, 0x02]
+-- *** Exception: (line 1, column 1):
+--
+-- The function 'mplus' allows you to try reading input with two different
+-- readers. The first reader is run. If that succeeds then the value
+-- it read is returned. Only if it fails is the second reader run. If it
+-- succeeds then its value is returned. If the second reader also fails
+-- then the whole read fails.
+--
+-- Note, the first reader may consume input even
+-- if the reading fails. If
+-- this is not desired, wrap the first reader with 'try'. This
+-- first example shows how even though the first reader fails, the second
+-- one succeeds.
+--
+-- >>> runS (mzero `mplus` byte) [1, 2]
+-- Right (1,[2])
+--
+-- In the following example the second reader should succeed, except in trying
+-- the first reader all the input was consumed. Therefore, the second reader
+-- and the overall read represented by the @mplus@ also failed.
+--
+-- >>> runS (bytes 3 `mplus` bytes 2) [1, 2]
+-- Left (line 1, column 3):
+-- unexpected end of input
+--
+-- This can be resolved, if desired, by wrapping the first reader with try:
+--
+-- >>> runS (try (bytes 3) `mplus` bytes 2) [1,2]
+-- Right ([1,2],[])
+--
+-- The 'Alternative' instance works just like the 'MonadPlus' instance
+-- with 'empty' equivalent to 'mzero' and 'Control.Applicative.<|>' equivalent to 'mplus'.
+--
+-- The instances for 'Monad', 'Functor', and 'Applicative' all work as
+-- expected. Here are some examples:
+--
+-- In this example we use '<$>' (an alias for 'fmap') to multiply the
+-- byte we read by 2.
+--
+-- >>> run ((*2) <$> byte) [1]
+-- 2
+--
+-- This example shows the use of 'Applicative'
+--
+-- >>> run ((*) <$> byte <*> byte) [3,7]
+-- 21
+--
+-- Finally, an example of 'Monad'.
+--
+-- >>> run (byte >>= \b -> if b < 5 then bytes 2 else bytes 3) [0, 2, 4, 5]
+-- [2,4]
+--
+-- >>> :{
+-- let reader =
+--       do
+--         b <- peek
+--         bs <- bytes b
+--         return $ Prelude.map (*2) bs
+-- in run reader [3,2,1]
+-- :}
+-- [6,4,2]
 module BACnet.Reader.Core
   (
   Reader,
@@ -130,25 +208,31 @@ byte = sat (const True)
 peek :: Reader Word8
 peek = R . lookAhead $ getParser byte
 
--- | @bytes n@ reads and consumes the next n bytes.
+-- | @bytes n@ reads and consumes the next n bytes. Returns the bytes
+--   as a ['Word8'].
 bytes :: Word8 -> Reader [Word8]
 bytes 0 = return []
 bytes n = (:) <$> byte <*> bytes (n-1)
 
-
+-- | @bytestring n@ reads and consumes the next n bytes. Returns the
+--   bytes in a 'BS.ByteString'.
 bytestring :: Word8 -> Reader BS.ByteString
 bytestring 0 = return BS.empty
 bytestring n = BS.cons <$> byte <*> bytestring (n-1)
 
 readerBind :: Reader a -> (a -> Reader b) -> Reader b
-readerBind (R pa) f = R (pa >>= \val ->
-                         let (R pb) = f val in pb)
+readerBind ra f = R parserB
+  where parserB =
+          do
+            a <- getParser ra
+            getParser $ f a
 
+-- | Wraps the spec If the reader fails, then no input is consumed.
 try :: Reader a -> Reader a
 try = R . Pr.try . getParser
 
 instance Monad Reader where
-  fail _ = R $ parserFail ""
+  fail s = R $ parserFail s
   (>>=) = readerBind
   return v = R (parserReturn v)
 
