@@ -88,7 +88,7 @@ readBitStringAP =
     guard (tagLength tag /= 0)
     bs <- content id tag
     let bString = bitString (BS.head bs) (BS.unpack $ BS.tail bs)
-    maybe (fail "Invalid BitString encoding") (return) bString
+    maybe (fail "Invalid BitString encoding") return bString
 
 readEnumeratedAP :: Reader Enumerated
 readEnumeratedAP = Enumerated <$> (readEnumeratedAPTag >>= content foldbytes)

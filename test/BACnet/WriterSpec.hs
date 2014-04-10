@@ -145,7 +145,7 @@ spec =
         writeBitStringAP (fromJust $ bitString 3 [0x01, 0x02, 0x03, 0xF0])
           `shouldWrite` [0x85, 0x05, 0x03, 0x01, 0x02, 0x03, 0xF0]
 
-    describe "writeEnumeratedAP" $ do
+    describe "writeEnumeratedAP" $
       it "writes [0x91, 0x00] for 0" $
         writeEnumeratedAP (Enumerated 0) `shouldWrite` [0x91, 0x00]
 

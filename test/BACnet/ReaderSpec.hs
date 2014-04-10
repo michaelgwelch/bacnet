@@ -210,7 +210,7 @@ spec = do
       run readBitStringAP [0x80] `shouldThrow'` anyErrorCall
 
     it "reads [0x82 0x03 0xF7] and returns 'bitString 3 [0xF7]'" $
-      run readBitStringAP [0x82, 0x03, 0xF7] `shouldBe` (fromJust $ bitString 3 [0xF7])
+      run readBitStringAP [0x82, 0x03, 0xF7] `shouldBe` fromJust (bitString 3 [0xF7])
 
   describe "readEnumeratedAP" $ do
     it "reads [0x91, 0x00] and returns 0" $
@@ -237,4 +237,4 @@ spec = do
   describe "readObjectIdentifierAP" $
     it "reads [0xC4, 0x00, 0xC0, 0x00, 0x0F] and returns objectIdentifier 3 15" $
       run readObjectIdentifierAP [0xc4, 0x00, 0xc0, 0x00, 0x0F] `shouldBe`
-        (fromJust $ objectIdentifier 3 15)
+        fromJust (objectIdentifier 3 15)
