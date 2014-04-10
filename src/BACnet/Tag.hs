@@ -46,8 +46,7 @@ import qualified BACnet.Tag.Core as TC
 import BACnet.Reader.Core
 import qualified Data.ByteString.Lazy as BS
 import Data.Bits
-import qualified BACnet.Writer.Core as WC
-import BACnet.Writer.Core (Writer)
+import BACnet.Writer.Core (Writer, unsigned8, unsigned16, unsigned32, wzero)
 import Data.Monoid
 
 data Tag =
@@ -271,10 +270,10 @@ unfoldNum' n bs
 
 -- | Writes a tag appropriate for an application encoded null value
 writeNullAPTag :: Writer
-writeNullAPTag = WC.null
+writeNullAPTag = wzero
 
 writeBoolAPTag :: Bool -> Writer
-writeBoolAPTag b = WC.unsigned8 (if b then 0x11 else 0x10)
+writeBoolAPTag b = unsigned8 (if b then 0x11 else 0x10)
 
 writeUnsignedAPTag :: Word32 -> Writer
 writeUnsignedAPTag = writeIntegralTag 0x20
@@ -283,14 +282,14 @@ writeSignedAPTag :: Word32 -> Writer
 writeSignedAPTag = writeIntegralTag 0x30
 
 writeIntegralTag :: (Ord a, Num a, Integral a) => Word8 -> a -> Writer
-writeIntegralTag tag len | len < 5 = WC.unsigned8 (tag + fromIntegral len)
-                         | otherwise = WC.unsigned8 (tag + 5) <> WC.unsigned8 (fromIntegral len)
+writeIntegralTag tag len | len < 5 = unsigned8 (tag + fromIntegral len)
+                         | otherwise = unsigned8 (tag + 5) <> unsigned8 (fromIntegral len)
 
 writeRealAPTag :: Writer
-writeRealAPTag = WC.unsigned8 0x44
+writeRealAPTag = unsigned8 0x44
 
 writeDoubleAPTag :: Writer
-writeDoubleAPTag = WC.unsigned16 0x5508
+writeDoubleAPTag = unsigned16 0x5508
 
 writeOctetStringAPTag :: Word32 -> Writer
 writeOctetStringAPTag = writeAPTag 0x60
@@ -302,23 +301,23 @@ writeBitStringAPTag :: Word32 -> Writer
 writeBitStringAPTag = writeAPTag 0x80
 
 writeAPTag :: Word8 -> Word32 -> Writer
-writeAPTag tn len | len < 5 = WC.unsigned8 (tn + fromIntegral len)
-                  | len < 254 = WC.unsigned8 (tn + 5) <> WC.unsigned8 (fromIntegral len)
-                  | len < 65535 = WC.unsigned8 (tn + 5) <>
-                      WC.unsigned8 254 <>
-                      WC.unsigned16 (fromIntegral len)
-                  | otherwise = WC.unsigned8 (tn + 5) <>
-                      WC.unsigned8 255 <>
-                      WC.unsigned32 len
+writeAPTag tn len | len < 5 = unsigned8 (tn + fromIntegral len)
+                  | len < 254 = unsigned8 (tn + 5) <> unsigned8 (fromIntegral len)
+                  | len < 65535 = unsigned8 (tn + 5) <>
+                      unsigned8 254 <>
+                      unsigned16 (fromIntegral len)
+                  | otherwise = unsigned8 (tn + 5) <>
+                      unsigned8 255 <>
+                      unsigned32 len
 
 writeEnumeratedAPTag :: Word32 -> Writer
 writeEnumeratedAPTag = writeIntegralTag 0x90
 
 writeDateAPTag :: Writer
-writeDateAPTag = WC.unsigned8 0xA4
+writeDateAPTag = unsigned8 0xA4
 
 writeTimeAPTag :: Writer
-writeTimeAPTag = WC.unsigned8 0xB4
+writeTimeAPTag = unsigned8 0xB4
 
 writeObjectIdentifierAPTag :: Writer
-writeObjectIdentifierAPTag = WC.unsigned8 0xC4
+writeObjectIdentifierAPTag = unsigned8 0xC4

@@ -3,7 +3,7 @@ module BACnet.Writer.Core
   (
     Writer,
     runW,
-    null,
+    wzero,
     unsigned8,
     unsigned16,
     unsigned32,
@@ -38,8 +38,8 @@ instance Show Writer where
   show = show . runW
 
 -- | A writer that writes the byte 0x00
-null :: Writer
-null = W $ word8 0x00
+wzero :: Writer
+wzero = W $ word8 0x00
 
 -- | A function that writes a 'Word8' value.
 unsigned8 :: Word8 -> Writer
