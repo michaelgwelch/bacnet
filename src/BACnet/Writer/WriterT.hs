@@ -1,7 +1,7 @@
 -- | A neat idea. The type in this module WriterC is a Contravariant
 --   Functor which allows a user to easily combine writers in interesting
 --   fashion with the use of 'contramap'. It's not really necessary, but fun.
-module BACnet.WriterT where
+module BACnet.Writer.WriterT where
 
 import BACnet.Writer.Core
 import BACnet.Writer

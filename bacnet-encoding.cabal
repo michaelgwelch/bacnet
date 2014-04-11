@@ -58,7 +58,7 @@ library
 
   -- Modules included in this library but not exported.
   other-modules:       BACnet.Tag.Core,
-                       BACnet.WriterT
+                       BACnet.Writer.WriterT
 
   -- LANGUAGE extensions used by modules in this package.
   -- other-extensions:
