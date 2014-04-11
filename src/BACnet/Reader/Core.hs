@@ -140,8 +140,7 @@ try = R . Pr.try . getParser
 
 -- | A reader that returns the remaing input stream.
 getInputStream :: Reader BS.ByteString
-getInputStream =
-  R $ getParserState >>= return . stateInput
+getInputStream = R $ stateInput <$> getParserState
 
 -- | A reader that returns the current state of the input stream. In other words,
 -- it returns the portion of the stream that has not yet been consumed. It
@@ -154,7 +153,7 @@ getInputStream =
 -- >>>run (byte >> getInputState) [1,2,3,4]
 -- [2,3,4]
 getInputState :: Reader [Word8]
-getInputState = getInputStream >>= return . BS.unpack
+getInputState = BS.unpack <$> getInputStream
 
 
 instance Monad Reader where
