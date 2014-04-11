@@ -1,3 +1,5 @@
+-- | Defines a collection of helper functions for examinging the bits
+-- of tags.
 module BACnet.Tag.Core (
   isAP,
   isCS,
