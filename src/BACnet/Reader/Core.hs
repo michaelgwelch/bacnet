@@ -157,9 +157,9 @@ getInputState = BS.unpack <$> getInputStream
 
 
 instance Monad Reader where
-  fail s = R $ parserFail s
+  fail = R . fail
   (>>=) = readerBind
-  return v = R (parserReturn v)
+  return = R . return
 
 instance Functor Reader where
   fmap = liftM
