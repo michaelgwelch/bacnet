@@ -19,6 +19,7 @@ module BACnet.Prim
   ) where
 
 import Data.Word (Word8, Word16, Word32, Word)
+import Data.Int (Int32)
 import Data.Bits (shiftR, shiftL, (.&.), (.|.))
 import Control.Monad (liftM, liftM2)
 import qualified Data.Bits as B
@@ -95,8 +96,8 @@ getInstanceNumber = (.&. 0x003FFFFF) . getRawValue
 data Any =
     NullAP
   | BooleanAP Bool
-  | UnsignedAP Word
-  | SignedAP Int
+  | UnsignedAP Word32
+  | SignedAP Int32
   | RealAP Float
   | DoubleAP Double
   | OctetStringAP [Word8]

@@ -40,8 +40,8 @@ readAnyAP =
     case t of
       NullAP -> return Prim.NullAP
       BoolAP b -> return $ Prim.BooleanAP b
-      UnsignedAP _ -> Prim.UnsignedAP <$> readUnsigned t
-      SignedAP _ -> Prim.SignedAP <$> readSigned t
+      UnsignedAP _ -> Prim.UnsignedAP . fromIntegral <$> readUnsigned t
+      SignedAP _ -> Prim.SignedAP . fromIntegral <$> readSigned t
       RealAP -> Prim.RealAP <$> readReal
       DoubleAP -> Prim.DoubleAP <$> readDouble
       OctetStringAP _ -> Prim.OctetStringAP <$> readOctetString t

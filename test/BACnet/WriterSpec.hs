@@ -10,6 +10,7 @@ import Data.Maybe (fromJust)
 import Data.Word (Word8)
 import BACnet.EncodableSpec
 import Data.Monoid
+import Control.Applicative
 
 shouldWrite :: Writer -> [Word8] -> Expectation
 shouldWrite = shouldBe . runW
@@ -230,6 +231,8 @@ instance Arbitrary Writer where
     writeDoubleAP <$> arbitrary,
     writeOctetStringAP <$> arbitrary,
     writeStringAP <$> arbitrary,
+    writeBitStringAP <$> arbitrary,
+    writeEnumeratedAP <$> arbitrary,
     writeDateAP <$> arbitrary,
     writeTimeAP <$> arbitrary,
     writeObjectIdentifierAP <$> arbitrary

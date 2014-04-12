@@ -34,6 +34,7 @@ import Data.Word
 import Data.Int
 import Prelude hiding (null)
 import qualified Data.ByteString.Lazy.UTF8 as UTF8
+import qualified Data.ByteString.Lazy as BS
 import Data.Monoid (mempty, Monoid, (<>))
 
 -- | Writes an application encoded null value which is always @0x00@.
@@ -73,8 +74,9 @@ writeOctetStringAP :: [Word8] -> Writer
 writeOctetStringAP o = writeOctetStringAPTag (fromIntegral $ length o) <> bytes o
 
 writeStringAP :: String -> Writer
-writeStringAP s = writeStringAPTag (fromIntegral $ length s + 1) <>
-                  unsigned8 0x00 <> bytestring (UTF8.fromString s)
+writeStringAP s = writeStringAPTag (fromIntegral $ BS.length encodedString + 1) <>
+                  unsigned8 0x00 <> bytestring encodedString
+            where encodedString = UTF8.fromString s
 
 writeBitStringAP :: BitString -> Writer
 writeBitStringAP s = writeBitStringAPTag (fromIntegral $ bitStringLength s) <>

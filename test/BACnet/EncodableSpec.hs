@@ -6,6 +6,7 @@ import BACnet.Writer
 import BACnet.Reader
 import BACnet.Encodable
 import BACnet.Prim
+import Data.Maybe
 import Data.Word (Word32)
 import Data.Int (Int32)
 import Control.Applicative
@@ -26,6 +27,7 @@ instance RoundTrippable Enumerated
 instance RoundTrippable Date
 instance RoundTrippable Time
 instance RoundTrippable ObjectIdentifier
+instance RoundTrippable Any
 
 instance RoundTrippable a => RoundTrippable [a]
 instance RoundTrippable a => RoundTrippable (Maybe a)
@@ -50,6 +52,31 @@ instance Arbitrary Time where
 instance Arbitrary ObjectIdentifier where
   arbitrary = ObjectIdentifier <$> arbitrary
   shrink = map ObjectIdentifier . shrink . getRawValue
+
+instance Arbitrary BitString where
+  arbitrary =
+    do
+      unusedBits <- choose(0,7)
+      singleByte <- arbitrary
+      bitStringBytes <- arbitrary
+      return . fromJust $ bitString unusedBits (singleByte : bitStringBytes)
+
+instance Arbitrary Any where
+  arbitrary = oneof [
+    return NullAP,
+    BooleanAP <$> arbitrary,
+    UnsignedAP <$> arbitrary,
+    SignedAP <$> arbitrary,
+    RealAP <$> arbitrary,
+    DoubleAP <$> arbitrary,
+    OctetStringAP <$> arbitrary,
+    CharacterStringAP <$> arbitrary,
+    BitStringAP <$> arbitrary,
+    EnumeratedAP <$> arbitrary,
+    DateAP <$> arbitrary,
+    TimeAP <$> arbitrary,
+    ObjectIdentifierAP <$> arbitrary
+    ]
 
 
 spec :: Spec
@@ -102,6 +129,10 @@ spec =
     describe "Encodable Time" $
       it "round trips" $
         property $ \t -> roundTrip (t :: Time)
+
+    describe "Encodable Any" $
+      it "round trips" $
+        property $ \v -> roundTrip (v :: Any)
 {-}
     describe "Encodable ObjectIdentifier" $
       it "round trips" $
