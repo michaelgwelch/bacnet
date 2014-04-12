@@ -1,5 +1,6 @@
 module BACnet.Prim
   (
+    Null(..),
     CharacterString(..),
     OctetString(..),
     BitString,
@@ -20,6 +21,8 @@ import Data.Word (Word8, Word16, Word32, Word)
 import Data.Bits (shiftR, shiftL, (.&.), (.|.))
 import Control.Monad (liftM, liftM2)
 import qualified Data.Bits as B
+
+newtype Null = Null { unNull :: () }
 
 newtype CharacterString = CharacterString { getString :: String }
 newtype OctetString = OctetString { getOSBytes :: [Word8] }

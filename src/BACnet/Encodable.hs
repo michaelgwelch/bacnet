@@ -1,3 +1,10 @@
+-- | Defines the 'Encodable' class and instances of 'Encodable' for
+-- all the primitive types supported by 'Reader' and 'Writer'
+-- An instance of 'Encodable' is able to encode a value to a 'BS.ByteString' and
+-- decode a 'BS.ByteString' to a value. All 'Encodable' instances should have
+-- the property
+--
+-- @ run bacnetDecode (runW $ bacnetEncode v) == v @
 module BACnet.Encodable
   (
   Encodable(..),
@@ -34,6 +41,10 @@ instance (Encodable a, Encodable b) => Encodable (Either a b) where
   bacnetEncode (Left a) = bacnetEncode a
   bacnetEncode (Right b) = bacnetEncode b
   bacnetDecode = try (Left <$> bacnetDecode) <|> (Right <$> bacnetDecode)
+
+instance Encodable Null where
+  bacnetEncode = const writeNullAP
+  bacnetDecode = readNullAP >>= return . Null
 
 instance Encodable Bool where
   bacnetEncode = writeBoolAP
