@@ -44,7 +44,7 @@ instance (Encodable a, Encodable b) => Encodable (Either a b) where
 
 instance Encodable Null where
   bacnetEncode = const writeNullAP
-  bacnetDecode = readNullAP >>= return . Null
+  bacnetDecode = Null <$> readNullAP
 
 instance Encodable Bool where
   bacnetEncode = writeBoolAP

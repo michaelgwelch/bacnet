@@ -97,7 +97,7 @@ readOctetStringAP :: Reader [Word8]
 readOctetStringAP = readOctetStringAPTag >>= readOctetString
 
 readOctetString :: Tag -> Reader [Word8]
-readOctetString t = content id t >>= return . BS.unpack
+readOctetString t = BS.unpack <$> content id t
 
 readStringAP :: Reader String
 readStringAP = readStringAPTag >>= readString
