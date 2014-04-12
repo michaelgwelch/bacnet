@@ -43,6 +43,13 @@ spec = do
       forAll (choose (1,255))
       (\b -> eval (run readNullAP [b]) `shouldThrow` anyErrorCall)
 
+  describe "readNullCS" $ do
+    it "run (readNullCS 4) [0x48] returns ()" $
+      run (readNullCS 4)  [0x48] `shouldBe` ()
+
+    it "run (readNullCS 254) [0xF8, 0xFE] returns ()" $
+      run (readNullCS 254) [0xF8, 0xFE] `shouldBe` ()
+
   describe "readBoolAP" $ do
     it "reads [0x10] and returns False" $
       run readBoolAP [0x10] `shouldBe` False
@@ -54,6 +61,18 @@ spec = do
       property $
       forAll (choose (0,255) `suchThat` (\b -> b /= 0x10 && b /= 0x11))
       (\b -> eval (run readBoolAP [b]) `shouldThrow` anyErrorCall)
+
+  describe "readBoolCS" $ do
+    it "run (readBoolCS 32) [0xF9, 0x20, 0x00] returns False" $
+      run (readBoolCS 32) [0xF9, 0x20, 0x00] `shouldBe` False
+
+    it "run (readBoolCS 254) [0xF9, 0xFE, 0x01] returns True" $
+      run (readBoolCS 254) [0xF9, 0xFE, 0x01] `shouldBe` True
+
+    it "fails on any other value for the last byte" $
+      property $
+      forAll (choose (2,255))
+      (\b -> eval (run (readBoolCS 7) [0x79, b]) `shouldThrow` anyErrorCall)
 
   describe "readUnsignedAP" $ do
     it "reads [0x21, 0x00] and returns 0" $

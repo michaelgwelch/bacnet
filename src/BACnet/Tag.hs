@@ -7,6 +7,7 @@ module BACnet.Tag
   readNullAPTag,
   readNullCSTag,
   readBoolAPTag,
+  readBoolCSTag,
   readUnsignedAPTag,
   readSignedAPTag,
   readRealAPTag,
@@ -208,7 +209,7 @@ readCS tn p co
       guard (p len)
       return $ co tn len
     where
-      guardTagNumber expected actual
+      guardTagNumber actual expected
         = when (actual == 0x0F) (void $ sat(==expected)) <|>
             guard (expected == actual)
 
