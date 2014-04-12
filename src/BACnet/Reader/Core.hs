@@ -125,14 +125,8 @@ bytestring :: Word8 -> Reader BS.ByteString
 bytestring 0 = return BS.empty
 bytestring n = BS.cons <$> byte <*> bytestring (n-1)
 
-
--- Interesting implementation.
--- f <$> pa converts the Parser a to a Parser (Reader b)
--- The bind operation "passes" the Reader b from the Parser (Reader b) to getParser
--- which extracts another internal Parser b (see defn of Reader) and we're left with a Parser b.
--- Finally we pass that to the R constructor to get a Reader b.
 readerBind :: Reader a -> (a -> Reader b) -> Reader b
-readerBind (R pa) f = R $ (f <$> pa) >>= getParser
+readerBind ra f = R $ getParser ra >>= getParser . f
 
 -- | Attempts the specified reader. If the reader fails, then no input is consumed.
 --   Otherwise, it returns the read value as normal.
