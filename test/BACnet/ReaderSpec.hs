@@ -238,3 +238,50 @@ spec = do
     it "reads [0xC4, 0x00, 0xC0, 0x00, 0x0F] and returns objectIdentifier 3 15" $
       run readObjectIdentifierAP [0xc4, 0x00, 0xc0, 0x00, 0x0F] `shouldBe`
         fromJust (objectIdentifier 3 15)
+
+  describe "readAnyAP" $ do
+    it "reads NullAP [0x00]" $
+      run readAnyAP [0x00] `shouldBe` NullAP
+
+    context "it can read Boolean Ap" $ do
+      it "reads [0x10]" $
+        run readAnyAP [0x10] `shouldBe` BooleanAP False
+
+      it "reads [0x11]" $
+        run readAnyAP [0x11] `shouldBe` BooleanAP True
+
+    it "reads UnsignedAP" $
+      run readAnyAP [0x24, 0x11, 0x11, 0x22, 0xff] `shouldBe` UnsignedAP 0x111122ff
+
+    it "reads SignedAP" $
+      run readAnyAP [0x34, 0x22, 0x11, 0xff, 0x34] `shouldBe` SignedAP 0x2211ff34
+
+    it "reads RealAP" $
+      run readAnyAP [0x44, 0x00, 0x00, 0x00, 0x01] `shouldBe` RealAP 1.4e-45
+
+    it "reads DoubleAP" $
+      run readAnyAP [85,8,62,149,18,122,154,191,163,50]
+        `shouldBe` DoubleAP 3.14e-7
+
+    it "reads OctetStringAP" $
+      run readAnyAP [0x65,6,1,2,3,4,5,6] `shouldBe` OctetStringAP [1,2,3,4,5,6]
+
+    it "reads CharacterStringAP" $
+      run readAnyAP [0x75,6,0,72,69,76,76,79] `shouldBe` CharacterStringAP "HELLO"
+
+    it "reads BitStringAP" $
+      run readAnyAP [0x85,0x03,0x02,0xcd,0x00]
+        `shouldBe` (BitStringAP . fromJust $ bitString 2 [0xcd, 0x00])
+
+    it "reads EnumeratedAP" $
+      run readAnyAP [0x92, 0xfe, 0xdc] `shouldBe` EnumeratedAP (Enumerated 0xfedc)
+
+    it "reads DateAP" $
+      run readAnyAP [0xa4, 100, 2, 3, 4] `shouldBe` DateAP (Date 100 2 3 4)
+
+    it "reads TimeAP" $
+      run readAnyAP [0xb4, 11, 12, 13, 0] `shouldBe` TimeAP (Time 11 12 13 0)
+
+    it "reads ObjectIdentifierAP" $
+      run readAnyAP [0xc4, 0x00, 0x80, 0x00, 0x05] `shouldBe`
+        ObjectIdentifierAP (fromJust $ objectIdentifier 2 5)

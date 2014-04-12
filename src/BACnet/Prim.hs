@@ -105,4 +105,4 @@ data Any =
   | EnumeratedAP Enumerated
   | DateAP Date
   | TimeAP Time
-  | ObjectIdentifierAP ObjectIdentifier
+  | ObjectIdentifierAP ObjectIdentifier deriving (Eq, Show)
