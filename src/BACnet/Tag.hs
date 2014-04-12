@@ -18,6 +18,7 @@ module BACnet.Tag
   readDateAPTag,
   readTimeAPTag,
   readObjectIdentifierAPTag,
+  readAnyAPTag,
   Tag(..),
   boolVal,
   tagLength,
@@ -165,6 +166,31 @@ readTimeAPTag = sat (== 0xb4) >> return TimeAP
 
 readObjectIdentifierAPTag :: Reader Tag
 readObjectIdentifierAPTag = sat (== 0xc4) >> return ObjectIdentifierAP
+
+
+peeksat :: (Word8 -> Bool) -> Reader Word8
+peeksat p = peek >>= \b -> if p b then return b else fail "predicate failed"
+
+readAnyAPTag :: Reader Tag
+readAnyAPTag =
+  do
+    t <- peeksat TC.isAP
+    case TC.tagNumber t of
+      0 -> readNullAPTag
+      1 -> readBoolAPTag
+      2 -> readUnsignedAPTag
+      3 -> readSignedAPTag
+      4 -> readRealAPTag
+      5 -> readDoubleAPTag
+      6 -> readOctetStringAPTag
+      7 -> readStringAPTag
+      8 -> readBitStringAPTag
+      9 -> readEnumeratedAPTag
+      10 -> readDateAPTag
+      11 -> readTimeAPTag
+      12 -> readObjectIdentifierAPTag
+      _ -> fail "Invalid tag number for AP Tag"
+
 
 readAP :: Word8 -> (Word32 -> Tag) -> Reader Tag
 readAP tn co = sat (\b -> TC.tagNumber b == tn && TC.isAP b && TC.lvt b <= 5) >>=
