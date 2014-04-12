@@ -71,11 +71,11 @@ instance Encodable OctetString where
   bacnetDecode = OctetString <$> readOctetStringAP
 
 instance Encodable CharacterString where
-  bacnetEncode = undefined
+  bacnetEncode = writeStringAP . getString
   bacnetDecode = CharacterString <$> readStringAP
 
 instance Encodable BitString where
-  bacnetEncode = undefined
+  bacnetEncode = writeBitStringAP
   bacnetDecode = readBitStringAP
 
 instance Encodable Enumerated where
@@ -91,7 +91,7 @@ instance Encodable Time where
   bacnetDecode = readTimeAP
 
 instance Encodable ObjectIdentifier where
-  bacnetEncode = undefined
+  bacnetEncode = writeObjectIdentifierAP
   bacnetDecode = readObjectIdentifierAP
 
 instance Encodable Any where
