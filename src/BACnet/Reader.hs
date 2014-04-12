@@ -1,4 +1,4 @@
--- | Defines a reader for reading BACnet encoded values
+-- | Defines 'Reader's for reading BACnet encoded values
 module BACnet.Reader
   (
     Reader,
@@ -27,10 +27,31 @@ import Data.Int
 import Data.Maybe
 import BACnet.Tag
 import BACnet.Reader.Core
-import BACnet.Prim
-import qualified BACnet.Prim as Pr
+import qualified BACnet.Prim as Prim
 import qualified Data.ByteString.Lazy as BS
 import qualified Data.ByteString.Lazy.UTF8 as UTF8
+
+
+readAnyAP :: Reader Prim.Any
+readAnyAP =
+  do
+    t <- readAnyAPTag
+    case t of
+      NullAP -> return Prim.NullAP
+      BoolAP b -> return $ Prim.BooleanAP b
+      UnsignedAP _ -> Prim.UnsignedAP <$> readUnsigned t
+      SignedAP _ -> Prim.SignedAP <$> readSigned t
+      RealAP -> Prim.RealAP <$> readReal
+      DoubleAP -> Prim.DoubleAP <$> readDouble
+      OctetStringAP _ -> Prim.OctetStringAP <$> readOctetString t
+      CharacterStringAP _ -> Prim.CharacterStringAP <$> readString t
+      BitStringAP _ -> Prim.BitStringAP <$> readBitString t
+      EnumeratedAP _ -> Prim.EnumeratedAP <$> readEnumerated t
+      DateAP -> Prim.DateAP <$> readDate
+      TimeAP -> Prim.TimeAP <$> readTime
+      ObjectIdentifierAP -> Prim.ObjectIdentifierAP <$> readObjectIdentifier t
+      _ -> fail "Invalid AP Tag"
+
 
 -- | Reads an application encoded null value
 readNullAP :: Reader ()
@@ -46,7 +67,7 @@ readBoolAP = boolVal <$> readBoolAPTag
 -- | Reads an application encoded unsigned integral value
 readUnsignedAP' :: Reader Word
 readUnsignedAP' = readUnsignedAPTag >>=
-                  content foldbytes
+                  readUnsigned
 
 -- | Reads an application encoded unsigned integral value.
 readUnsignedAP :: Reader Word32
@@ -54,54 +75,79 @@ readUnsignedAP = fromIntegral <$> readUnsignedAP'
 
 readSignedAP' :: Reader Int
 readSignedAP' = readSignedAPTag >>=
-                content foldsbytes
+                readSigned
 
 readSignedAP :: Reader Int32
 readSignedAP = fromIntegral <$> readSignedAP'
 
 readRealAP :: Reader Float
-readRealAP = runGet getFloat32be <$ readRealAPTag <*> bytestring 4
+readRealAP = readRealAPTag *> readReal
+
+readReal :: Reader Float
+readReal = runGet getFloat32be <$> bytestring 4
 
 readDoubleAP :: Reader Double
-readDoubleAP = runGet getFloat64be <$ readDoubleAPTag <*> bytestring 8
+readDoubleAP = readDoubleAPTag >> readDouble
+
+readDouble :: Reader Double
+readDouble = runGet getFloat64be <$> bytestring 8
 
 readOctetStringAP :: Reader [Word8]
-readOctetStringAP =
-  do
-    t <- readOctetStringAPTag
-    bs <- content id t
-    return $ BS.unpack bs
+readOctetStringAP = readOctetStringAPTag >>= readOctetString
+
+readOctetString :: Tag -> Reader [Word8]
+readOctetString t = content id t >>= return . BS.unpack
 
 readStringAP :: Reader String
-readStringAP =
+readStringAP = readStringAPTag >>= readString
+
+readString :: Tag -> Reader String
+readString t =
   do
-    t <- readStringAPTag
     sat (==0x00) -- encoding is 0x00 which is the value used to indicate UTF-8 (formerly ANSI X3.4)
     bs <- bytestring $ fromIntegral $ tagLength t - 1
     return $ UTF8.toString bs
 
-readBitStringAP :: Reader BitString
-readBitStringAP =
+readBitStringAP :: Reader Prim.BitString
+readBitStringAP = readBitStringAPTag >>= readBitString
+
+readBitString :: Tag -> Reader Prim.BitString
+readBitString t =
   do
-    tag <- readBitStringAPTag
-    guard (tagLength tag /= 0)
-    bs <- content id tag
-    let bString = bitString (BS.head bs) (BS.unpack $ BS.tail bs)
+    guard (tagLength t /= 0)
+    bs <- content id t
+    let bString = Prim.bitString (BS.head bs) (BS.unpack $ BS.tail bs)
     maybe (fail "Invalid BitString encoding") return bString
 
-readEnumeratedAP :: Reader Enumerated
-readEnumeratedAP = Enumerated <$> (readEnumeratedAPTag >>= content foldbytes)
+readEnumeratedAP :: Reader Prim.Enumerated
+readEnumeratedAP = readEnumeratedAPTag >>= readEnumerated
 
-readDateAP :: Reader Date
-readDateAP = const Date <$> readDateAPTag <*> byte <*> byte <*> byte <*> byte
+readEnumerated :: Tag -> Reader Prim.Enumerated
+readEnumerated t = Prim.Enumerated <$> readUnsigned t
 
-readTimeAP :: Reader Time
-readTimeAP = const Time <$> readTimeAPTag <*> byte <*> byte <*> byte <*> byte
+readDateAP :: Reader Prim.Date
+readDateAP = readDateAPTag >> readDate
 
-readObjectIdentifierAP :: Reader ObjectIdentifier
-readObjectIdentifierAP = (ObjectIdentifier . fromIntegral) <$>
-                         (readObjectIdentifierAPTag >>= content foldbytes)
+readDate :: Reader Prim.Date
+readDate = Prim.Date <$> byte <*> byte <*> byte <*> byte
 
+readTimeAP :: Reader Prim.Time
+readTimeAP = readTimeAPTag >> readTime
+
+readTime :: Reader Prim.Time
+readTime = Prim.Time <$> byte <*> byte <*> byte <*> byte
+
+readObjectIdentifierAP :: Reader Prim.ObjectIdentifier
+readObjectIdentifierAP = readObjectIdentifierAPTag >>= readObjectIdentifier
+
+readObjectIdentifier :: Tag -> Reader Prim.ObjectIdentifier
+readObjectIdentifier t = Prim.ObjectIdentifier . fromIntegral <$> readUnsigned t
+
+readUnsigned :: Tag -> Reader Word
+readUnsigned = content foldbytes
+
+readSigned :: Tag -> Reader Int
+readSigned = content foldsbytes
 
 foldbytes :: BS.ByteString -> Word
 foldbytes = BS.foldl (\acc w -> acc * 256 + fromIntegral w) 0
