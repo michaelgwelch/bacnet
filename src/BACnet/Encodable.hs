@@ -94,6 +94,9 @@ instance Encodable ObjectIdentifier where
   bacnetEncode = undefined
   bacnetDecode = readObjectIdentifierAP
 
+instance Encodable Any where
+  bacnetEncode = writeAnyAP
+  bacnetDecode = readAnyAP
 
 class CSEncodable a where
   csbacnetEncode :: Word8 -> a -> Writer

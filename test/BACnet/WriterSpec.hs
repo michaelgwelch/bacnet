@@ -162,6 +162,48 @@ spec =
         writeObjectIdentifierAP (fromJust $ objectIdentifier 4 255) `shouldWrite`
           [0xC4, 0x01, 0x00, 0x00, 0xFF]
 
+    describe "writeAnyAP" $ do
+      it "writes Null" $
+        writeAnyAP NullAP `shouldWrite` [0x00]
+
+      it "writes Bool" $
+        writeAnyAP (BooleanAP True) `shouldWrite` [0x11]
+
+      it "writes Unsigned" $
+        writeAnyAP (UnsignedAP 0x1234) `shouldWrite` [0x22, 0x12, 0x34]
+
+      it "writes Signed" $
+        writeAnyAP (SignedAP 0x7764) `shouldWrite` [0x32, 0x77, 0x64]
+
+      it "writes Real" $
+        writeAnyAP (RealAP 2.138e19) `shouldWrite` [68,95,148,90,130]
+
+      it "writes Double" $
+        writeAnyAP (DoubleAP 3.123e245) `shouldWrite` [85,8,114,230,222,113,2,8,2,207]
+
+      it "writes OctetString" $
+        writeAnyAP (OctetStringAP [0x23, 0xFF]) `shouldWrite` [0x62,0x23,0xFF]
+
+      it "writes String" $
+        writeAnyAP (CharacterStringAP "HI") `shouldWrite` [0x73,0,72,73]
+
+      it "writes BitString" $
+        writeAnyAP (BitStringAP . fromJust $ bitString 3 [0x99,0x34])
+          `shouldWrite` [0x83,0x03,0x99,0x34]
+
+      it "writes Enumerated" $
+        writeAnyAP (EnumeratedAP $ Enumerated 0xFF8345) `shouldWrite` [0x93,0xFF,0x83,0x45]
+
+      it "writes Date" $
+        writeAnyAP (DateAP $ Date 7 9 10 11) `shouldWrite` [0xa4,7,9,10,11]
+
+      it "writes Time" $
+        writeAnyAP (TimeAP $ Time 1 5 7 12) `shouldWrite` [0xb4,1,5,7,12]
+
+      it "writes ObjectIdentifier" $
+        writeAnyAP (ObjectIdentifierAP . fromJust $ objectIdentifier 3 12)
+          `shouldWrite` [0xc4, 0x00, 0xC0, 0x00, 0x0C]
+
     describe "Writer" $
       context "Is a Monoid" $ do
         it "obeys the law mempty <> writer = writer" $
@@ -172,8 +214,6 @@ spec =
 
         it "is associative" $
           property $ \x y z -> (x <> y) <> (z :: Writer) == x <> (y <> z)
-
-
 
 
 
