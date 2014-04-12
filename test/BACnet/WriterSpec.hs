@@ -139,7 +139,7 @@ spec =
 
     describe "writeBitStringAP" $ do
       it "writes [0x81, 0x00] for empty bit string" $
-        writeBitStringAP empty `shouldWrite` [0x81, 0x00]
+        writeBitStringAP bitStringEmpty `shouldWrite` [0x81, 0x00]
 
       it "writes [0x85, 0x05, 0x03, 0x01, 0x02, 0x03, 0xF0] for input BitString 3 [0x01, 0x02, 0x03, 0xF0]" $
         writeBitStringAP (fromJust $ bitString 3 [0x01, 0x02, 0x03, 0xF0])

@@ -8,7 +8,7 @@ module BACnet.Prim
     bitStringBytes,
     bitStringLength,
     bitString,
-    empty,
+    bitStringEmpty,
     testBit,
     Enumerated(..),
     Date(..),
@@ -31,8 +31,8 @@ newtype OctetString = OctetString { getOSBytes :: [Word8] }
 data BitString = BitString { bitStringUnusedBits :: Word8, bitStringBytes :: [Word8] }
   deriving (Eq, Show)
 
-empty :: BitString
-empty = BitString 0 []
+bitStringEmpty :: BitString
+bitStringEmpty = BitString 0 []
 
 bitString :: Word8 -> [Word8] -> Maybe BitString
 bitString n bs | null bs && n /= 0 || n >= 8 = Nothing

@@ -26,7 +26,7 @@ spec =
 
       context "when given empty" $
         it "gives an error for any bit position" $
-          property $ \n -> evaluate (testBit empty n) `shouldThrow` anyErrorCall
+          property $ \n -> evaluate (testBit bitStringEmpty n) `shouldThrow` anyErrorCall
 
       context "when given (BitString 3 [0x00, 0x88])" $ do
         let bs = fromJust $ bitString 3 [0x00, 0x88]
