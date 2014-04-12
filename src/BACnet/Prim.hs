@@ -14,7 +14,8 @@ module BACnet.Prim
     Date(..),
     Time(..),
     ObjectIdentifier(..),
-    objectIdentifier
+    objectIdentifier,
+    Any(..)
   ) where
 
 import Data.Word (Word8, Word16, Word32, Word)
@@ -89,3 +90,19 @@ getObjectType = fromIntegral . (.&. 0x3F) . flip shiftR 22 . getRawValue
 
 getInstanceNumber :: ObjectIdentifier -> Word32
 getInstanceNumber = (.&. 0x003FFFFF) . getRawValue
+
+
+data Any =
+    NullAP
+  | BooleanAP Bool
+  | UnsignedAP Word
+  | SignedAP Int
+  | RealAP Float
+  | DoubleAP Double
+  | OctetStringAP [Word8]
+  | CharacterStringAP String
+  | BitStringAP BitString
+  | EnumeratedAP Enumerated
+  | DateAP Date
+  | TimeAP Time
+  | ObjectIdentifierAP ObjectIdentifier
