@@ -57,7 +57,7 @@ library
                        BACnet.Reader.Core, BACnet.Writer.Core, BACnet.Prim
 
   -- Modules included in this library but not exported.
-  other-modules:       BACnet.Tag.Core,
+  other-modules:       BACnet.Tag.Core, BACnet.Tag.Reader,
                        BACnet.Writer.WriterT
 
   -- LANGUAGE extensions used by modules in this package.

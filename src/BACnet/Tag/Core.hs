@@ -10,10 +10,66 @@ module BACnet.Tag.Core (
   closeType,
   isExtendedLength,
   tagNumber,
+  Tag(..),
+  TagNumber,
+  Length,
+  Class,
+  classAP,
+  classCS,
+  classValue,
+  boolVal,
+  tagLength,
   ) where
 
 import Data.Word
 import Data.Bits
+
+data Tag =
+          NullAP
+        | NullCS Word8
+        | BoolAP Bool
+        | BoolCS Word8
+        | UnsignedAP Word32
+        | UnsignedCS Word8 Word32
+        | SignedAP Word32
+        | SignedCS Word8 Word32
+        | RealAP
+        | RealCS Word8
+        | DoubleAP
+        | DoubleCS Word8
+        | OctetStringAP Word32 -- length
+        | OctetStringCS Word8 Word32
+        | CharacterStringAP Word32 -- length
+        | BitStringAP Word32 -- length
+        | BitStringCS Word8 Word32
+        | EnumeratedAP Word32 -- length
+        | EnumeratedCS Word8 Word32
+        | DateAP
+        | DateCS Word8
+        | TimeAP
+        | TimeCS Word8
+        | ObjectIdentifierAP
+        | ObjectIdentifierCS Word8
+  deriving (Show, Eq)
+
+boolVal :: Tag -> Bool
+boolVal (BoolAP val) = val
+
+tagLength :: Tag -> Word32
+tagLength (UnsignedAP len) = len
+tagLength (SignedAP len) = len
+tagLength (OctetStringAP len) = len
+tagLength (CharacterStringAP len) = len
+tagLength (BitStringAP len) = len
+tagLength (EnumeratedAP len) = len
+tagLength ObjectIdentifierAP = 4
+tagLength (UnsignedCS _ len) = len
+
+type TagNumber = Word8
+type Length = Word32
+newtype Class = Class { classValue :: Word8 }
+classAP = Class 0
+classCS = Class 8
 
 -- | 'True' if the Class bit (the 3rd bit) is not set
 isAP :: Word8 -> Bool
