@@ -102,10 +102,10 @@ class CSEncodable a where
   csbacnetEncode :: Word8 -> a -> Writer
   csbacnetDecode :: Word8 -> Reader a
 
-{-}
-instance CSEncodable Bool where
-  csbacnetEncode = undefined
-  csbacnetDecode = readBoolCS -}
+
+instance CSEncodable Null where
+  csbacnetEncode = const . writeNullCS
+  csbacnetDecode tn = Null <$> readNullCS tn
 
 {-
 data ValueUpdate = VU { identity :: Int32, val :: Word32 }
