@@ -23,7 +23,7 @@ module BACnet.Tag.Reader
 import BACnet.Tag.Core
 import BACnet.Reader.Core
 import Data.Word
-import Control.Monad (when, void, guard, (>=>))
+import Control.Monad (when, void, guard)
 import Control.Applicative ((<|>))
 
 -- | Like 'const' but applied twice. It takes three arguments
@@ -119,15 +119,21 @@ readAnyAPTag =
       12 -> readObjectIdentifierAPTag
       _ -> fail "Invalid tag number for AP Tag"
 
+type LengthPredicate = Length -> Bool
+type APTagConstructor = Length -> Tag
+type CSTagConstructor = TagNumber -> Length -> Tag
 
-readAP :: Word8 -> (Word32 -> Tag) -> Reader Tag
-readAP tn co = sat (\b -> tagNumber b == tn && isAP b && lvt b <= 5) >>=
-               (lengthOfContent >=> return . co)
+readAP :: TagNumber -> APTagConstructor -> Reader Tag
+readAP tn co =
+  do
+    b <- sat (\b -> tagNumber b == tn && isAP b && lvt b <= 5)
+    len <- lengthOfContent b
+    return $ co len
 
 -- | @readCS tn pred co@ succeeds if tn matches the tag number that is read,
 --   and the tag is CS encoded, and the length checking predicate returns true.
 --   It constructs a Tag by using the given constructor @co@.
-readCS :: Word8 -> (Word32 -> Bool) -> (Word8 -> Word32 -> Tag) -> Reader Tag
+readCS :: TagNumber -> LengthPredicate -> CSTagConstructor -> Reader Tag
 readCS tn p co
   = do
       b <- sat isCS
@@ -140,7 +146,10 @@ readCS tn p co
         = when (actual == 0x0F) (void $ sat(==expected)) <|>
             guard (expected == actual)
 
-lengthOfContent :: Word8 -> Reader Word32
+type TagInitialOctet = Word8
+
+-- | Given an initial octet of a tag, reads the length of the content
+lengthOfContent :: TagInitialOctet -> Reader Word32
 lengthOfContent b | lvt b < 5 = return . fromIntegral $ lvt b
                   | lvt b == 5 = lengthOfContent'
                   | otherwise = fail "Invalid length encoding"
