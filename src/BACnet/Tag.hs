@@ -5,6 +5,7 @@ module BACnet.Tag
   readBoolAPTag,
   readBoolCSTag,
   readUnsignedAPTag,
+  readUnsignedCSTag,
   readSignedAPTag,
   readRealAPTag,
   readDoubleAPTag,
@@ -20,6 +21,7 @@ module BACnet.Tag
   boolVal,
   tagLength,
   writeNullAPTag,
+  writeNullCSTag,
   writeBoolAPTag,
   writeUnsignedAPTag,
   writeSignedAPTag,
@@ -34,6 +36,7 @@ module BACnet.Tag
   writeObjectIdentifierAPTag,
   unfoldNum,
   Unfoldable,
+  TagNumber
   ) where
 
 import Control.Monad
@@ -46,6 +49,13 @@ import qualified Data.ByteString.Lazy as BS
 import Data.Bits
 import BACnet.Writer.Core (Writer, unsigned8, unsigned16, unsigned32, wzero)
 import Data.Monoid
+
+type TagNumber = Word8
+type Length = Word32
+newtype Class = Class Word8
+classAP = Class 0
+classCS = Class 8
+
 
 data Tag =
           NullAP
@@ -75,50 +85,52 @@ data Tag =
         | ObjectIdentifierCS Word8
   deriving (Show, Eq)
 
-const' :: a -> b -> c -> a
-const' = const . const
+-- | Like 'const' but applied twice. It takes three arguments
+--   and returns the first.
+const2 :: a -> b -> c -> a
+const2 = const . const
 
 readNullAPTag :: Reader Tag
 readNullAPTag = sat (== 0x00) >> return NullAP
 
-readNullCSTag :: Word8 -> Reader Tag
-readNullCSTag t = readCS t (==0) (const' $ NullCS t)
+readNullCSTag :: TagNumber -> Reader Tag
+readNullCSTag t = readCS t (==0) (const2 $ NullCS t)
 
 readBoolAPTag :: Reader Tag
 readBoolAPTag = (sat (== 0x10) >> return (BoolAP False)) <|>
                 (sat (== 0x11) >> return (BoolAP True))
 
-readBoolCSTag :: Word8 -> Reader Tag
-readBoolCSTag t = readCS t (==1) (const' $ BoolCS t)
+readBoolCSTag :: TagNumber -> Reader Tag
+readBoolCSTag t = readCS t (==1) (const2 $ BoolCS t)
 
 readUnsignedAPTag :: Reader Tag
 readUnsignedAPTag = readAP 2 UnsignedAP
 
-readUnsignedCSTag :: Word8 -> Reader Tag
+readUnsignedCSTag :: TagNumber -> Reader Tag
 readUnsignedCSTag t = readCS t (/=0) UnsignedCS
 
 readSignedAPTag :: Reader Tag
 readSignedAPTag = readAP 3 SignedAP
 
-readSignedCSTag :: Word8 -> Reader Tag
+readSignedCSTag :: TagNumber -> Reader Tag
 readSignedCSTag t = readCS t (/=0) SignedCS
 
 readRealAPTag :: Reader Tag
 readRealAPTag = sat (== 0x44) >> return RealAP
 
-readRealCSTag :: Word8 -> Reader Tag
-readRealCSTag t = readCS t (==4) (const' $ RealCS t)
+readRealCSTag :: TagNumber -> Reader Tag
+readRealCSTag t = readCS t (==4) (const2 $ RealCS t)
 
 readDoubleAPTag :: Reader Tag
 readDoubleAPTag = sat (== 0x55) >> sat (== 0x08) >> return DoubleAP
 
-readDoubleCSTag :: Word8 -> Reader Tag
-readDoubleCSTag t = readCS t (==8) (const' $ DoubleCS t)
+readDoubleCSTag :: TagNumber -> Reader Tag
+readDoubleCSTag t = readCS t (==8) (const2 $ DoubleCS t)
 
 readOctetStringAPTag :: Reader Tag
 readOctetStringAPTag = readAP 6 OctetStringAP
 
-readOctetStringCSTag :: Word8 -> Reader Tag
+readOctetStringCSTag :: TagNumber -> Reader Tag
 readOctetStringCSTag t = readCS t (const True) OctetStringCS
 
 readStringAPTag :: Reader Tag
@@ -127,7 +139,7 @@ readStringAPTag = readAP 7 CharacterStringAP
 readBitStringAPTag :: Reader Tag
 readBitStringAPTag = readAP 8 BitStringAP
 
-readBitStringCSTag :: Word8 -> Reader Tag
+readBitStringCSTag :: TagNumber -> Reader Tag
 readBitStringCSTag t = readCS t (const True) BitStringCS
 
 readEnumeratedAPTag :: Reader Tag
@@ -215,6 +227,7 @@ tagLength (CharacterStringAP len) = len
 tagLength (BitStringAP len) = len
 tagLength (EnumeratedAP len) = len
 tagLength ObjectIdentifierAP = 4
+tagLength (UnsignedCS _ len) = len
 
 
 
@@ -273,6 +286,9 @@ unfoldNum' n bs
 writeNullAPTag :: Writer
 writeNullAPTag = wzero
 
+writeNullCSTag :: TagNumber -> Writer
+writeNullCSTag tn = writeCSTag tn 1
+
 writeBoolAPTag :: Bool -> Writer
 writeBoolAPTag b = unsigned8 (if b then 0x11 else 0x10)
 
@@ -293,23 +309,16 @@ writeDoubleAPTag :: Writer
 writeDoubleAPTag = unsigned16 0x5508
 
 writeOctetStringAPTag :: Word32 -> Writer
-writeOctetStringAPTag = writeAPTag 0x60
+writeOctetStringAPTag = writeAPTag 6
 
 writeStringAPTag :: Word32 -> Writer
-writeStringAPTag = writeAPTag 0x70
+writeStringAPTag = writeAPTag 7
 
 writeBitStringAPTag :: Word32 -> Writer
-writeBitStringAPTag = writeAPTag 0x80
+writeBitStringAPTag = writeAPTag 8
 
-writeAPTag :: Word8 -> Word32 -> Writer
-writeAPTag tn len | len < 5 = unsigned8 (tn + fromIntegral len)
-                  | len < 254 = unsigned8 (tn + 5) <> unsigned8 (fromIntegral len)
-                  | len < 65535 = unsigned8 (tn + 5) <>
-                      unsigned8 254 <>
-                      unsigned16 (fromIntegral len)
-                  | otherwise = unsigned8 (tn + 5) <>
-                      unsigned8 255 <>
-                      unsigned32 len
+writeAPTag :: TagNumber -> Length -> Writer
+writeAPTag tn len = writeTag tn len classAP
 
 writeEnumeratedAPTag :: Word32 -> Writer
 writeEnumeratedAPTag = writeIntegralTag 0x90
@@ -322,3 +331,26 @@ writeTimeAPTag = unsigned8 0xB4
 
 writeObjectIdentifierAPTag :: Writer
 writeObjectIdentifierAPTag = unsigned8 0xC4
+
+writeCSTag :: TagNumber -> Length -> Writer
+writeCSTag tn l = writeTag tn l classCS
+
+
+writeTag :: TagNumber -> Length -> Class -> Writer
+writeTag tn len c = writeInitialOctet <> writeExtendedTag <> writeExtendedLength
+  where cv = let (Class v) = c  in v
+        tv
+          | tn < 15 = shiftL tn 4
+          | otherwise = 0xF0
+        initialOctet
+          | len < 5 = tv + cv + fromIntegral len
+          | otherwise = tv + cv + 5
+        writeInitialOctet = unsigned8 initialOctet
+        writeExtendedTag
+          | tn < 15 = mempty
+          | otherwise = unsigned8 tn
+        writeExtendedLength
+          | len < 5 = mempty
+          | len < 254 = unsigned8 $ fromIntegral len
+          | len < 65535 = unsigned8 254 <> unsigned16 (fromIntegral len)
+          | otherwise = unsigned8 255 <> unsigned32 len
