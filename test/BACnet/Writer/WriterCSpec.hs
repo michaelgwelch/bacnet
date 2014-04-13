@@ -1,8 +1,8 @@
-module BACnet.Writer.WriterTSpec where
+module BACnet.Writer.WriterCSpec where
 
 import Test.Hspec
 import BACnet.Writer
-import BACnet.Writer.WriterT
+import BACnet.Writer.WriterC
 
 spec :: Spec
 spec =
