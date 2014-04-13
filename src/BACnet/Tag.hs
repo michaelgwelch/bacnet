@@ -287,7 +287,7 @@ writeNullAPTag :: Writer
 writeNullAPTag = wzero
 
 writeNullCSTag :: TagNumber -> Writer
-writeNullCSTag tn = writeCSTag tn 1
+writeNullCSTag tn = writeCSTag tn (1 :: Length)
 
 writeBoolAPTag :: Bool -> Writer
 writeBoolAPTag b = unsigned8 (if b then 0x11 else 0x10)
