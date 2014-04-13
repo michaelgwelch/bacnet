@@ -10,4 +10,4 @@ spec :: Spec
 spec =
   describe "readNullAPTag" $
     it "returns () for input [0x00]" $
-      run readNullAPTag [0x00] `shouldBe` apNullTag
+      run readNullAPTag [0x00] `shouldBe` NullAP

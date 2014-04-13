@@ -1,9 +1,5 @@
 module BACnet.Tag
   (
-  apNullTag,
-  apTrueTag,
-  apFalseTag,
-  apUnsignedTag,
   readNullAPTag,
   readNullCSTag,
   readBoolAPTag,
@@ -78,28 +74,6 @@ data Tag =
         | ObjectIdentifierAP
         | ObjectIdentifierCS Word8
   deriving (Show, Eq)
-
-apNullTag :: Tag
-apNullTag = NullAP
-
-csNullTag :: Word8 -> Tag
-csNullTag = NullCS
-
-apTrueTag :: Tag
-apTrueTag = BoolAP True
-
-apFalseTag :: Tag
-apFalseTag = BoolAP False
-
-csBoolTag :: Word8 -> Tag
-csBoolTag = BoolCS
-
-apUnsignedTag :: Word -> Tag
-apUnsignedTag w | w <= fromIntegral (maxBound :: Word8) = UnsignedAP 1
-                | w <= fromIntegral (maxBound :: Word16) = UnsignedAP 2
-                | w <= 0x0FFF = UnsignedAP 3
-                | w <= fromIntegral (maxBound :: Word32) = UnsignedAP 4
-                | otherwise = undefined
 
 const' :: a -> b -> c -> a
 const' = const . const
