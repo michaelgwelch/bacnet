@@ -23,6 +23,7 @@ module BACnet.Writer
     writeDateAP,
     writeTimeAP,
     writeObjectIdentifierAP,
+    writeNullCS,
   ) where
 
 import BACnet.Prim
@@ -43,6 +44,9 @@ import Data.Monoid (mempty, Monoid, (<>))
 -- [0]
 writeNullAP :: Writer
 writeNullAP = writeNullAPTag
+
+writeNullCS :: TagNumber -> Writer
+writeNullCS t = writeNullCSTag t <> wzero
 
 -- | Writes an application encoded boolean value which is either 0x10 (False),
 --   or 0x11 (True).

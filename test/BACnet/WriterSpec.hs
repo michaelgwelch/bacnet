@@ -24,6 +24,10 @@ spec =
       it "writes [0x00]" $
         writeNullAP `shouldWrite` [0x00]
 
+    describe "writeNullCS" $
+      it "writeNullCS 254 should write [0xF9, 0xFE]" $
+        writeNullCS 254 `shouldWrite` [0xF9, 0xFE, 0x00]
+
     describe "writeBoolAP" $ do
       it "writes [0x10] for Bool input False" $
         writeBoolAP False `shouldWrite` [0x10]
