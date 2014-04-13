@@ -18,7 +18,8 @@ module BACnet.Reader
     readTimeAP,
     readObjectIdentifierAP,
     readNullCS,
-    readBoolCS
+    readBoolCS,
+    readUnsignedCS,
   ) where
 
 import Control.Applicative
@@ -60,14 +61,14 @@ readAnyAP =
 readNullAP :: Reader ()
 readNullAP = void readNullAPTag
 
-readNullCS :: Word8 -> Reader ()
+readNullCS :: TagNumber -> Reader ()
 readNullCS = void . readNullCSTag
 
 -- | Reads an application encoded boolean value
 readBoolAP :: Reader Bool
 readBoolAP = boolVal <$> readBoolAPTag
 
-readBoolCS :: Word8 -> Reader Bool
+readBoolCS :: TagNumber -> Reader Bool
 readBoolCS t = readBoolCSTag t >> readBool
 
 readBool :: Reader Bool
@@ -81,6 +82,9 @@ readUnsignedAP' = readUnsignedAPTag >>=
 -- | Reads an application encoded unsigned integral value.
 readUnsignedAP :: Reader Word32
 readUnsignedAP = fromIntegral <$> readUnsignedAP'
+
+readUnsignedCS :: TagNumber -> Reader Word32
+readUnsignedCS t = fromIntegral <$> (readUnsignedCSTag t >>= readUnsigned)
 
 readSignedAP' :: Reader Int
 readSignedAP' = readSignedAPTag >>=
