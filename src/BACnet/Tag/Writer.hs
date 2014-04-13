@@ -1,41 +1,26 @@
-module BACnet.Tag
+module BACnet.Tag.Writer
   (
-  module BACnet.Tag.Reader,
-  Tag(..),
-  boolVal,
-  tagLength,
-  writeNullAPTag,
-  writeNullCSTag,
-  writeBoolAPTag,
-  writeUnsignedAPTag,
-  writeSignedAPTag,
-  writeRealAPTag,
-  writeDoubleAPTag,
-  writeOctetStringAPTag,
-  writeStringAPTag,
-  writeBitStringAPTag,
-  writeEnumeratedAPTag,
-  writeDateAPTag,
-  writeTimeAPTag,
-  writeObjectIdentifierAPTag,
-  unfoldNum,
-  Unfoldable,
-  TagNumber
+    writeNullAPTag,
+    writeBoolAPTag,
+    writeUnsignedAPTag,
+    writeSignedAPTag,
+    writeRealAPTag,
+    writeDoubleAPTag,
+    writeOctetStringAPTag,
+    writeStringAPTag,
+    writeBitStringAPTag,
+    writeEnumeratedAPTag,
+    writeDateAPTag,
+    writeTimeAPTag,
+    writeObjectIdentifierAPTag,
+    writeNullCSTag,
   ) where
 
-import Control.Monad
-import Control.Applicative
-import Data.Word (Word, Word32, Word16, Word8)
-import Data.Int (Int, Int32, Int16, Int8)
-import BACnet.Tag.Core
-import BACnet.Tag.Reader
-import BACnet.Reader.Core
-import qualified Data.ByteString.Lazy as BS
-import Data.Bits
-import BACnet.Writer.Core (Writer, unsigned8, unsigned16, unsigned32, wzero)
+import Data.Word
 import Data.Monoid
-import BACnet.Writer.UnfoldNum
-
+import BACnet.Writer.Core
+import BACnet.Tag.Core
+import Data.Bits
 
 -- | Writes a tag appropriate for an application encoded null value
 writeNullAPTag :: Writer

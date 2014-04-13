@@ -29,7 +29,8 @@ import Data.Binary.Get
 import Data.Binary.IEEE754
 import Data.Int
 import Data.Maybe
-import BACnet.Tag
+import BACnet.Tag.Reader
+import BACnet.Tag.Core
 import BACnet.Reader.Core
 import qualified BACnet.Prim as Prim
 import qualified Data.ByteString.Lazy as BS

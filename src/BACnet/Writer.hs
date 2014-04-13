@@ -29,7 +29,9 @@ module BACnet.Writer
 import BACnet.Prim
 import qualified BACnet.Prim as Prim
 import BACnet.Writer.Core
-import BACnet.Tag
+import BACnet.Tag.Writer
+import BACnet.Tag.Core
+import BACnet.Writer.UnfoldNum
 import Data.Bits
 import Data.Word
 import Data.Int
