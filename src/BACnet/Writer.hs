@@ -116,7 +116,7 @@ writeDoubleAP :: Double -> Writer
 writeDoubleAP d = writeDoubleAPTag <> double d
 
 writeDoubleCS :: TagNumber -> Double -> Writer
-writeDoubleCS tn d = writeCSTag tn (8 :: Length) <> double f
+writeDoubleCS tn d = writeCSTag tn (8 :: Length) <> double d
 
 writeOctetStringAP :: [Word8] -> Writer
 writeOctetStringAP o = writeOctetStringAPTag (fromIntegral $ length o) <> bytes o
