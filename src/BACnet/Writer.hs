@@ -110,10 +110,13 @@ writeRealAP :: Float -> Writer
 writeRealAP f = writeRealAPTag <> real f
 
 writeRealCS :: TagNumber -> Float -> Writer
-writeRealCS tn f = writeCSTag tn 4 <> real f
+writeRealCS tn f = writeCSTag tn (4 :: Length) <> real f
 
 writeDoubleAP :: Double -> Writer
 writeDoubleAP d = writeDoubleAPTag <> double d
+
+writeDoubleCS :: TagNumber -> Double -> Writer
+writeDoubleCS tn d = writeCSTag tn (8 :: Length) <> double f
 
 writeOctetStringAP :: [Word8] -> Writer
 writeOctetStringAP o = writeOctetStringAPTag (fromIntegral $ length o) <> bytes o
