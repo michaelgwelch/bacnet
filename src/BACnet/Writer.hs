@@ -79,19 +79,29 @@ writeBoolCS tn b = writeBoolCSTag tn <> unsigned8 fromBool
 -- >>> runW $ writeUnsignedAP 0x17F7F
 -- [35,1,127,127]
 writeUnsignedAP :: Word32 -> Writer
-writeUnsignedAP = writeIntegral writeUnsignedAPTag
+writeUnsignedAP = writeIntegralAP writeUnsignedAPTag
 
---writeUnsignedCS :: TagNumber -> Word32 -> Writer
---writeUnsignedCS tn v = writeIntegral writeUnsignedCSTag
+-- | Writes a context specific unsigned value
+--
+-- >>> runW $ writeUnsignedCS 14 128
+-- [233,128]
+writeUnsignedCS :: TagNumber -> Word32 -> Writer
+writeUnsignedCS = flip writeIntegralCS writeUnsignedCSTag
 
 writeSignedAP :: Int32 -> Writer
-writeSignedAP = writeIntegral writeSignedAPTag
+writeSignedAP = writeIntegralAP writeSignedAPTag
 
-writeIntegral :: (Num a, Unfoldable a, Ord a, Bits a, Integral a)
-  => (Word32 -> Writer) -> a -> Writer
-writeIntegral tagWriter n =
+writeIntegralAP :: (Num a, Unfoldable a, Ord a, Bits a, Integral a)
+  => (Length -> Writer) -> a -> Writer
+writeIntegralAP tagWriter n =
   let (len, bs) = unfoldNum n
   in tagWriter len <> bytes bs
+
+writeIntegralCS :: (Num a, Unfoldable a, Ord a, Bits a, Integral a)
+  => TagNumber -> (TagNumber -> Length -> Writer) -> a -> Writer
+writeIntegralCS tn tagWriter n =
+  let (len, bs) = unfoldNum n
+  in tagWriter tn len <> bytes bs
 
 writeRealAP :: Float -> Writer
 writeRealAP f = writeRealAPTag <> real f
@@ -112,7 +122,7 @@ writeBitStringAP s = writeBitStringAPTag (fromIntegral $ bitStringLength s) <>
                      unsigned8 (bitStringUnusedBits s) <> bytes (bitStringBytes s)
 
 writeEnumeratedAP :: Enumerated -> Writer
-writeEnumeratedAP = writeIntegral writeEnumeratedAPTag . getEnumValue
+writeEnumeratedAP = writeIntegralAP writeEnumeratedAPTag . getEnumValue
 
 writeDateAP :: Date -> Writer
 writeDateAP (Date y m dm dw) =

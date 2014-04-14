@@ -15,6 +15,7 @@ module BACnet.Tag.Writer
     writeObjectIdentifierAPTag,
     writeNullCSTag,
     writeBoolCSTag,
+    writeUnsignedCSTag,
   ) where
 
 import Data.Word
@@ -38,6 +39,9 @@ writeBoolCSTag tn = writeCSTag tn (1 :: Length)
 
 writeUnsignedAPTag :: Word32 -> Writer
 writeUnsignedAPTag = writeIntegralTag 0x20
+
+writeUnsignedCSTag :: TagNumber -> Length -> Writer
+writeUnsignedCSTag = writeCSTag
 
 writeSignedAPTag :: Word32 -> Writer
 writeSignedAPTag = writeIntegralTag 0x30
