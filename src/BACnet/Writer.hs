@@ -39,6 +39,7 @@ import Prelude hiding (null)
 import qualified Data.ByteString.Lazy.UTF8 as UTF8
 import qualified Data.ByteString.Lazy as BS
 import Data.Monoid (mempty, Monoid, (<>))
+import Data.Functor.Contravariant
 
 -- | Writes an application encoded null value which is always @0x00@.
 --
@@ -47,8 +48,15 @@ import Data.Monoid (mempty, Monoid, (<>))
 writeNullAP :: Writer
 writeNullAP = writeNullAPTag
 
+-- | Writes a context specific encoded null value.
+--
+-- >>> runW $ writeNullCS 254
+-- [248,254]
+--
+-- >>> [0xF8,0xFE] == [248,254]
+-- True
 writeNullCS :: TagNumber -> Writer
-writeNullCS t = writeNullCSTag t <> wzero
+writeNullCS = writeNullCSTag
 
 -- | Writes an application encoded boolean value which is either 0x10 (False),
 --   or 0x11 (True).
@@ -58,8 +66,23 @@ writeNullCS t = writeNullCSTag t <> wzero
 writeBoolAP :: Bool -> Writer
 writeBoolAP = writeBoolAPTag
 
+-- | Writes a context specific boolean value
+--
+-- >>> runW $ writeBoolCS 10 True
+-- [169,1]
+writeBoolCS :: TagNumber -> Bool  -> Writer
+writeBoolCS tn b = writeBoolCSTag tn <> unsigned8 fromBool
+  where fromBool = if b then 1 else 0
+
+-- | Writes an application encoded unsigned value
+--
+-- >>> runW $ writeUnsignedAP 0x17F7F
+-- [35,1,127,127]
 writeUnsignedAP :: Word32 -> Writer
 writeUnsignedAP = writeIntegral writeUnsignedAPTag
+
+--writeUnsignedCS :: TagNumber -> Word32 -> Writer
+--writeUnsignedCS tn v = writeIntegral writeUnsignedCSTag
 
 writeSignedAP :: Int32 -> Writer
 writeSignedAP = writeIntegral writeSignedAPTag

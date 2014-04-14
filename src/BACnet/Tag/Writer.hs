@@ -14,6 +14,7 @@ module BACnet.Tag.Writer
     writeTimeAPTag,
     writeObjectIdentifierAPTag,
     writeNullCSTag,
+    writeBoolCSTag,
   ) where
 
 import Data.Word
@@ -27,10 +28,13 @@ writeNullAPTag :: Writer
 writeNullAPTag = wzero
 
 writeNullCSTag :: TagNumber -> Writer
-writeNullCSTag tn = writeCSTag tn (1 :: Length)
+writeNullCSTag tn = writeCSTag tn (0 :: Length)
 
 writeBoolAPTag :: Bool -> Writer
 writeBoolAPTag b = unsigned8 (if b then 0x11 else 0x10)
+
+writeBoolCSTag :: TagNumber -> Writer
+writeBoolCSTag tn = writeCSTag tn (1 :: Length)
 
 writeUnsignedAPTag :: Word32 -> Writer
 writeUnsignedAPTag = writeIntegralTag 0x20
