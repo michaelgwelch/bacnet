@@ -86,10 +86,13 @@ writeUnsignedAP = writeIntegralAP writeUnsignedAPTag
 -- >>> runW $ writeUnsignedCS 14 128
 -- [233,128]
 writeUnsignedCS :: TagNumber -> Word32 -> Writer
-writeUnsignedCS = flip writeIntegralCS writeUnsignedCSTag
+writeUnsignedCS = flip writeIntegralCS writeCSTag
 
 writeSignedAP :: Int32 -> Writer
 writeSignedAP = writeIntegralAP writeSignedAPTag
+
+writeSignedCS :: TagNumber -> Int32 -> Writer
+writeSignedCS = flip writeIntegralCS writeCSTag
 
 writeIntegralAP :: (Num a, Unfoldable a, Ord a, Bits a, Integral a)
   => (Length -> Writer) -> a -> Writer

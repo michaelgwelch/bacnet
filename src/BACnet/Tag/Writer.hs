@@ -15,7 +15,6 @@ module BACnet.Tag.Writer
     writeObjectIdentifierAPTag,
     writeNullCSTag,
     writeBoolCSTag,
-    writeUnsignedCSTag,
     writeCSTag
   ) where
 
