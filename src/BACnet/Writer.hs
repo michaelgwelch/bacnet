@@ -106,6 +106,9 @@ writeIntegralCS tn tagWriter n =
 writeRealAP :: Float -> Writer
 writeRealAP f = writeRealAPTag <> real f
 
+writeRealCS :: TagNumber -> Float -> Writer
+writeRealCS tn f = writeCSTag tn 4 <> real f
+
 writeDoubleAP :: Double -> Writer
 writeDoubleAP d = writeDoubleAPTag <> double d
 
