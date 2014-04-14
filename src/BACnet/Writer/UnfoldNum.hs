@@ -1,19 +1,25 @@
+-- | Defines the class 'Unfoldable', the function 'unfoldNum',
+-- and useful instances of 'Unfoldable'.
 module BACnet.Writer.UnfoldNum
   (
     unfoldNum,
-    Unfoldable(..)
+    Unfoldable
   ) where
 
 import Data.Bits
 import Data.Word
 import Data.Int
 
+-- | A useful class for unfolding numbers.
 class Unfoldable a where
+  -- | Returns 'True' if the argument can be represented in a 'Word8'
   byteGuard :: a -> Bool
 
+-- | Returns 'True' if the argument fits in the bounds of an 'Int8'.
 signedByteGuard :: (Ord a, Num a) => a -> Bool
 signedByteGuard n = n >= (-128) && n <= 127
 
+-- | Returns 'True' if the argument fits in the bounds of a 'Word8'.
 unsignedByteGuard :: (Ord a, Num a) => a -> Bool
 unsignedByteGuard n = n <= 255
 
@@ -42,6 +48,10 @@ instance Unfoldable Int8 where
   byteGuard = signedByteGuard
 
 
+-- | Given an argument whose type is an instance of 'Num', 'Unfoldable',
+-- 'Ord', 'Bits', and 'Integral', this function will returns a pair
+-- that contains the representation of the argument as a ['Word8'] and
+-- that contains the length of the list.
 unfoldNum :: (Num a, Unfoldable a, Ord a, Bits a, Integral a)
   => a -> (Word32, [Word8])
 unfoldNum = flip unfoldNum' []
