@@ -15,7 +15,8 @@ module BACnet.Tag.Writer
     writeObjectIdentifierAPTag,
     writeNullCSTag,
     writeBoolCSTag,
-    writeCSTag
+    writeCSTag,
+    runW
   ) where
 
 import Data.Word

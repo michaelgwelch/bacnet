@@ -156,22 +156,22 @@ writeEnumeratedAP :: Enumerated -> Writer
 writeEnumeratedAP = writeIntegralAP writeEnumeratedAPTag . getEnumValue
 
 writeEnumeratedCS :: TagNumber -> Enumerated -> Writer
-writeEnumeratedCS tn = flip writeIntegralCS writeCSTag tn . getEnumValue
+writeEnumeratedCS tn = writeIntegralCS tn writeCSTag . getEnumValue
 
 writeDateAP :: Date -> Writer
-writeDateAP d = writeAnyString (const writeDateAPTag) encodeDate d
+writeDateAP = writeAnyString (const writeDateAPTag) encodeDate
 
 writeDateCS :: TagNumber -> Date -> Writer
-writeDateCS tn d = writeAnyString (writeCSTag tn) encodeDate d
+writeDateCS tn = writeAnyString (writeCSTag tn) encodeDate
 
 encodeDate :: Date -> BS.ByteString
 encodeDate (Date y m dm dw) = BS.pack [y,m,dm,dw]
 
 writeTimeAP :: Time -> Writer
-writeTimeAP t = writeAnyString (const writeTimeAPTag) encodeTime t
+writeTimeAP = writeAnyString (const writeTimeAPTag) encodeTime
 
 writeTimeCS :: TagNumber -> Time -> Writer
-writeTimeCS tn t = writeAnyString (writeCSTag tn) encodeTime t
+writeTimeCS tn = writeAnyString (writeCSTag tn) encodeTime
 
 encodeTime :: Time -> BS.ByteString
 encodeTime (Time h m s hs) = BS.pack [h,m,s,hs]
@@ -180,7 +180,7 @@ writeObjectIdentifierAP :: ObjectIdentifier -> Writer
 writeObjectIdentifierAP = (writeObjectIdentifierAPTag <>) . unsigned32 . getRawValue
 
 writeObjectIdentifierCS :: TagNumber -> ObjectIdentifier -> Writer
-writeObjectIdentifierCS tn = flip writeIntegralCS writeCSTag tn . getRawValue
+writeObjectIdentifierCS tn = writeIntegralCS tn writeCSTag . getRawValue
 
 writeAnyAP :: Any -> Writer
 writeAnyAP Prim.NullAP = writeNullAP
