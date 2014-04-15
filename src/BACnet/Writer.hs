@@ -119,30 +119,68 @@ writeDoubleCS :: TagNumber -> Double -> Writer
 writeDoubleCS tn d = writeCSTag tn (8 :: Length) <> double d
 
 writeOctetStringAP :: [Word8] -> Writer
-writeOctetStringAP o = writeOctetStringAPTag (fromIntegral $ length o) <> bytes o
+writeOctetStringAP = writeAnyString writeOctetStringAPTag BS.pack
+
+-- | Writes a context specific octet string
+--
+-- >>>runW $ writeOctetStringCS 3 [0x01, 0x02]
+-- [58,1,2]
+writeOctetStringCS :: TagNumber -> [Word8] -> Writer
+writeOctetStringCS tn = writeAnyString (writeCSTag tn) BS.pack
 
 writeStringAP :: String -> Writer
-writeStringAP s = writeStringAPTag (fromIntegral $ BS.length encodedString + 1) <>
-                  unsigned8 0x00 <> bytestring encodedString
-            where encodedString = UTF8.fromString s
+writeStringAP = writeAnyString writeStringAPTag utf8EncodeString
+
+writeStringCS :: TagNumber -> String -> Writer
+writeStringCS tn = writeAnyString (writeCSTag tn) utf8EncodeString
+
+utf8EncodeString :: String -> BS.ByteString
+utf8EncodeString = BS.cons 0x00 . UTF8.fromString
 
 writeBitStringAP :: BitString -> Writer
-writeBitStringAP s = writeBitStringAPTag (fromIntegral $ bitStringLength s) <>
-                     unsigned8 (bitStringUnusedBits s) <> bytes (bitStringBytes s)
+writeBitStringAP = writeAnyString writeBitStringAPTag encodeBitString
+
+writeBitStringCS :: TagNumber -> BitString -> Writer
+writeBitStringCS tn = writeAnyString (writeCSTag tn) encodeBitString
+
+encodeBitString :: BitString -> BS.ByteString
+encodeBitString s = BS.pack $ bitStringUnusedBits s : bitStringBytes s
+
+writeAnyString :: (Length -> Writer) -> (a -> BS.ByteString) -> a -> Writer
+writeAnyString fWriter encoder val =
+  fWriter (fromIntegral $ BS.length encodedString) <>
+  bytestring encodedString
+  where encodedString = encoder val
 
 writeEnumeratedAP :: Enumerated -> Writer
 writeEnumeratedAP = writeIntegralAP writeEnumeratedAPTag . getEnumValue
 
+writeEnumeratedCS :: TagNumber -> Enumerated -> Writer
+writeEnumeratedCS tn = flip writeIntegralCS writeCSTag tn . getEnumValue
+
 writeDateAP :: Date -> Writer
-writeDateAP (Date y m dm dw) =
-  writeDateAPTag <> unsigned8 y <> unsigned8 m <> unsigned8 dm <> unsigned8 dw
+writeDateAP d = writeAnyString (const writeDateAPTag) encodeDate d
+
+writeDateCS :: TagNumber -> Date -> Writer
+writeDateCS tn d = writeAnyString (writeCSTag tn) encodeDate d
+
+encodeDate :: Date -> BS.ByteString
+encodeDate (Date y m dm dw) = BS.pack [y,m,dm,dw]
 
 writeTimeAP :: Time -> Writer
-writeTimeAP (Time h m s hs) =
-  writeTimeAPTag <> unsigned8 h <> unsigned8 m <> unsigned8 s <> unsigned8 hs
+writeTimeAP t = writeAnyString (const writeTimeAPTag) encodeTime t
+
+writeTimeCS :: TagNumber -> Time -> Writer
+writeTimeCS tn t = writeAnyString (writeCSTag tn) encodeTime t
+
+encodeTime :: Time -> BS.ByteString
+encodeTime (Time h m s hs) = BS.pack [h,m,s,hs]
 
 writeObjectIdentifierAP :: ObjectIdentifier -> Writer
 writeObjectIdentifierAP = (writeObjectIdentifierAPTag <>) . unsigned32 . getRawValue
+
+writeObjectIdentifierCS :: TagNumber -> ObjectIdentifier -> Writer
+writeObjectIdentifierCS tn = flip writeIntegralCS writeCSTag tn . getRawValue
 
 writeAnyAP :: Any -> Writer
 writeAnyAP Prim.NullAP = writeNullAP
