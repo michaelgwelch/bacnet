@@ -20,6 +20,8 @@ module BACnet.Reader
     readNullCS,
     readBoolCS,
     readUnsignedCS,
+    readOpen,
+    readClose
   ) where
 
 import Control.Applicative
@@ -162,6 +164,12 @@ readUnsigned = content foldbytes
 
 readSigned :: Tag -> Reader Int
 readSigned = content foldsbytes
+
+readOpen :: TagNumber -> Reader ()
+readOpen = void . readOpenTag
+
+readClose :: TagNumber -> Reader ()
+readClose = void . readCloseTag
 
 foldbytes :: BS.ByteString -> Word
 foldbytes = BS.foldl (\acc w -> acc * 256 + fromIntegral w) 0
