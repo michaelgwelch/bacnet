@@ -18,6 +18,8 @@ module BACnet.Tag.Reader
     readTimeAPTag,
     readObjectIdentifierAPTag,
     readAnyAPTag,
+    readOpenTag,
+    readCloseTag
   ) where
 
 import BACnet.Tag.Core
@@ -96,6 +98,11 @@ readTimeAPTag = sat (== 0xb4) >> return TimeAP
 readObjectIdentifierAPTag :: Reader Tag
 readObjectIdentifierAPTag = sat (== 0xc4) >> return ObjectIdentifierAP
 
+readOpenTag :: TagNumber -> Reader Tag
+readOpenTag tn = readTag (==tn) (==classCS) (const True) (==6) (flip $ const Open)
+
+readCloseTag :: TagNumber -> Reader Tag
+readCloseTag tn = readTag (==tn) (==classCS) (const True) (==7) (flip $ const Close)
 
 peeksat :: (Word8 -> Bool) -> Reader Word8
 peeksat p = peek >>= \b -> if p b then return b else fail "predicate failed"
@@ -125,25 +132,27 @@ type APTagConstructor = Length -> Tag
 type CSTagConstructor = TagConstructor
 
 readAP :: TagNumber -> APTagConstructor -> Reader Tag
-readAP tn co = readTag (==tn) (==classAP) (const True) (const co)
+readAP tn co = readTag (==tn) (==classAP) (const True) (const True) (const co)
 
 
 -- | @readCS tn pred co@ succeeds if tn matches the tag number that is read,
 --   and the tag is CS encoded, and the length checking predicate returns true.
 --   It constructs a Tag by using the given constructor @co@.
 readCS :: TagNumber -> LengthPredicate -> CSTagConstructor -> Reader Tag
-readCS tn p co = readTag (==tn) (==classCS) p co
+readCS tn p co = readTag (==tn) (==classCS) p (const True) co
 
 type TagNumberPredicate = TagNumber -> Bool
 type ClassPredicate = Class -> Bool
 type TagConstructor = TagNumber -> Length -> Tag
-readTag :: TagNumberPredicate -> ClassPredicate -> LengthPredicate -> TagConstructor -> Reader Tag
-readTag tagNumberP classP lengthP co
+type TypePredicate = Word8 -> Bool
+readTag :: TagNumberPredicate -> ClassPredicate -> LengthPredicate ->
+  TypePredicate -> TagConstructor -> Reader Tag
+readTag tagNumberP classP lengthP typeP co
         = byte >>= \b ->
           readClass b >>= \c ->
           readExtendedTag b c >>= \tn ->
           readExtendedLength b >>= \len ->
-          guard (tagNumberP tn && classP c && lengthP len) >>
+          guard (tagNumberP tn && classP c && lengthP len && typeP b) >>
           (return $ co tn len)
       where readClass b = return $ if isCS b then classCS else classAP
             readExtendedTag b c | c == classAP = readTagNumber b

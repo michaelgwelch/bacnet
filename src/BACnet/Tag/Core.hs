@@ -26,30 +26,32 @@ import Data.Bits
 
 data Tag =
           NullAP
-        | NullCS Word8
+        | NullCS TagNumber
         | BoolAP Bool
-        | BoolCS Word8
-        | UnsignedAP Word32
-        | UnsignedCS Word8 Word32
-        | SignedAP Word32
-        | SignedCS Word8 Word32
+        | BoolCS TagNumber
+        | UnsignedAP Length
+        | UnsignedCS TagNumber Length
+        | SignedAP Length
+        | SignedCS TagNumber Length
         | RealAP
-        | RealCS Word8
+        | RealCS TagNumber
         | DoubleAP
-        | DoubleCS Word8
-        | OctetStringAP Word32 -- length
-        | OctetStringCS Word8 Word32
-        | CharacterStringAP Word32 -- length
-        | BitStringAP Word32 -- length
-        | BitStringCS Word8 Word32
-        | EnumeratedAP Word32 -- length
-        | EnumeratedCS Word8 Word32
+        | DoubleCS TagNumber
+        | OctetStringAP Length -- length
+        | OctetStringCS TagNumber Length
+        | CharacterStringAP Length -- length
+        | BitStringAP Length -- length
+        | BitStringCS TagNumber Length
+        | EnumeratedAP Length -- length
+        | EnumeratedCS TagNumber Length
         | DateAP
-        | DateCS Word8
+        | DateCS TagNumber
         | TimeAP
-        | TimeCS Word8
+        | TimeCS TagNumber
         | ObjectIdentifierAP
-        | ObjectIdentifierCS Word8
+        | ObjectIdentifierCS TagNumber
+        | Open TagNumber
+        | Close TagNumber
   deriving (Show, Eq)
 
 boolVal :: Tag -> Bool
