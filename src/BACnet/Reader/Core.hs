@@ -169,7 +169,7 @@ instance Alternative Reader where
   (<|>) = mplus
 
 instance MonadPlus Reader where
-  mzero = fail ""
+  mzero = fail "mzero"
   (R p1) `mplus` (R p2) = R (p1 `mplus` p2)
 
 -- $Introduction
@@ -227,6 +227,7 @@ instance MonadPlus Reader where
 --
 -- >>> run mzero [0x01, 0x02]
 -- *** Exception: (line 1, column 1):
+-- mzero
 --
 -- The function 'mplus' allows you to try reading input with two different
 -- readers. The first reader is run. If that succeeds then the value

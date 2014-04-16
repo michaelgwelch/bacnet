@@ -26,6 +26,7 @@ import Data.Word
 import Control.Monad (when, void, guard)
 import Control.Applicative ((<|>))
 
+
 -- | Like 'const' but applied twice. It takes three arguments
 --   and returns the first.
 const2 :: a -> b -> c -> a
@@ -35,14 +36,14 @@ readNullAPTag :: Reader Tag
 readNullAPTag = sat (== 0x00) >> return NullAP
 
 readNullCSTag :: TagNumber -> Reader Tag
-readNullCSTag t = readCS t (==0) (const2 $ NullCS t)
+readNullCSTag t = readCS t (==0) (flip $ const NullCS)
 
 readBoolAPTag :: Reader Tag
 readBoolAPTag = (sat (== 0x10) >> return (BoolAP False)) <|>
                 (sat (== 0x11) >> return (BoolAP True))
 
 readBoolCSTag :: TagNumber -> Reader Tag
-readBoolCSTag t = readCS t (==1) (const2 $ BoolCS t)
+readBoolCSTag t = readCS t (==1) (flip $ const BoolCS)
 
 readUnsignedAPTag :: Reader Tag
 readUnsignedAPTag = readAP 2 UnsignedAP
@@ -121,30 +122,42 @@ readAnyAPTag =
 
 type LengthPredicate = Length -> Bool
 type APTagConstructor = Length -> Tag
-type CSTagConstructor = TagNumber -> Length -> Tag
+type CSTagConstructor = TagConstructor
 
 readAP :: TagNumber -> APTagConstructor -> Reader Tag
-readAP tn co =
-  do
-    b <- sat (\b -> tagNumber b == tn && isAP b && lvt b <= 5)
-    len <- lengthOfContent b
-    return $ co len
+readAP tn co = readTag (==tn) (==classAP) (const True) (const co)
+
 
 -- | @readCS tn pred co@ succeeds if tn matches the tag number that is read,
 --   and the tag is CS encoded, and the length checking predicate returns true.
 --   It constructs a Tag by using the given constructor @co@.
 readCS :: TagNumber -> LengthPredicate -> CSTagConstructor -> Reader Tag
-readCS tn p co
-  = do
-      b <- sat isCS
-      guardTagNumber (tagNumber b) tn
-      len <- lengthOfContent b
-      guard (p len)
-      return $ co tn len
-    where
-      guardTagNumber actual expected
-        = when (actual == 0x0F) (void $ sat(==expected)) <|>
-            guard (expected == actual)
+readCS tn p co = readTag (==tn) (==classCS) p co
+
+type TagNumberPredicate = TagNumber -> Bool
+type ClassPredicate = Class -> Bool
+type TagConstructor = TagNumber -> Length -> Tag
+readTag :: TagNumberPredicate -> ClassPredicate -> LengthPredicate -> TagConstructor -> Reader Tag
+readTag tagNumberP classP lengthP co
+        = byte >>= \b ->
+          readClass b >>= \c ->
+          readExtendedTag b c >>= \tn ->
+          readExtendedLength b >>= \len ->
+          guard (tagNumberP tn && classP c && lengthP len) >>
+          (return $ co tn len)
+      where readClass b = return $ if isCS b then classCS else classAP
+            readExtendedTag b c | c == classAP = readTagNumber b
+                                | c == classCS =
+                                    (guard (tagNumber b == 15) >> byte) <|>
+                                    readTagNumber b
+            readTagNumber = return . tagNumber
+            readLVT b = return $ lvt b
+            readExtendedLength = lengthOfContent
+
+
+
+
+
 
 type TagInitialOctet = Word8
 

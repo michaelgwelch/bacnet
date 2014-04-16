@@ -67,7 +67,7 @@ tagLength (UnsignedCS _ len) = len
 
 type TagNumber = Word8
 type Length = Word32
-newtype Class = Class { classValue :: Word8 }
+newtype Class = Class { classValue :: Word8 } deriving Eq
 classAP = Class 0
 classCS = Class 8
 
