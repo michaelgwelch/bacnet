@@ -20,7 +20,7 @@ module BACnet.Prim
 import Data.Word (Word8, Word16, Word32, Word)
 import Data.Int (Int32)
 import Data.Bits (shiftR, shiftL, (.&.), (.|.))
-import Control.Monad (liftM, liftM2)
+import Control.Applicative ((<$>), (<*>))
 import qualified Data.Bits as B
 
 newtype CharacterString = CharacterString { characterStringValue :: String }
@@ -76,9 +76,8 @@ newtype ObjectIdentifier = ObjectIdentifier { objectIdentifierValue :: Word32 }
   deriving (Show, Eq)
 
 objectIdentifier :: Word16 -> Word32 -> Maybe ObjectIdentifier
-objectIdentifier ot inum =
-  liftM ObjectIdentifier rawValue
-  where rawValue = liftM2 (+) inum' ot'
+objectIdentifier ot inum = ObjectIdentifier <$> rawValue
+  where rawValue = (+) <$> inum' <*> ot'
         inum'
           | inum > 0x3FFFFF = Nothing
           | otherwise       = Just inum
