@@ -8,6 +8,7 @@
 module BACnet.Encodable
   (
   Encodable(..),
+  CSEncodable(..)
   ) where
 
 import BACnet.Writer.Core
@@ -106,6 +107,54 @@ class CSEncodable a where
 instance CSEncodable Null where
   csbacnetEncode = const . writeNullCS
   csbacnetDecode tn = Null <$> readNullCS tn
+
+instance CSEncodable Bool where
+  csbacnetEncode = writeBoolCS
+  csbacnetDecode = readBoolCS
+
+instance CSEncodable Word32 where
+  csbacnetEncode = writeUnsignedCS
+  csbacnetDecode = readUnsignedCS
+
+instance CSEncodable Int32 where
+  csbacnetEncode = writeSignedCS
+  csbacnetDecode = readSignedCS
+
+instance CSEncodable Float where
+  csbacnetEncode = writeRealCS
+  csbacnetDecode = readRealCS
+
+instance CSEncodable Double where
+  csbacnetEncode = writeDoubleCS
+  csbacnetDecode = readDoubleCS
+
+instance CSEncodable OctetString where
+  csbacnetEncode tn = writeOctetStringCS tn . getOSBytes
+  csbacnetDecode tn = OctetString <$> readOctetStringCS tn
+
+instance CSEncodable CharacterString where
+  csbacnetEncode tn = writeStringCS tn . getString
+  csbacnetDecode tn = CharacterString <$> readStringCS tn
+
+instance CSEncodable BitString where
+  csbacnetEncode = writeBitStringCS
+  csbacnetDecode = readBitStringCS
+
+instance CSEncodable Enumerated where
+  csbacnetEncode = writeEnumeratedCS
+  csbacnetDecode = readEnumeratedCS
+
+instance CSEncodable Date where
+  csbacnetEncode = writeDateCS
+  csbacnetDecode = readDateCS
+
+instance CSEncodable Time where
+  csbacnetEncode = writeTimeCS
+  csbacnetDecode = readTimeCS
+
+instance CSEncodable ObjectIdentifier where
+  csbacnetEncode = writeObjectIdentifierCS
+  csbacnetDecode = readObjectIdentifierCS
 
 {-
 data ValueUpdate = VU { identity :: Int32, val :: Word32 }

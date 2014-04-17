@@ -20,6 +20,16 @@ module BACnet.Reader
     readNullCS,
     readBoolCS,
     readUnsignedCS,
+    readSignedCS,
+    readRealCS,
+    readDoubleCS,
+    readOctetStringCS,
+    readStringCS,
+    readBitStringCS,
+    readEnumeratedCS,
+    readDateCS,
+    readTimeCS,
+    readObjectIdentifierCS,
     readOpen,
     readClose
   ) where
@@ -96,8 +106,14 @@ readSignedAP' = readSignedAPTag >>=
 readSignedAP :: Reader Int32
 readSignedAP = fromIntegral <$> readSignedAP'
 
+readSignedCS :: TagNumber -> Reader Int32
+readSignedCS t = fromIntegral <$> (readSignedCSTag t >>= readSigned)
+
 readRealAP :: Reader Float
 readRealAP = readRealAPTag *> readReal
+
+readRealCS :: TagNumber -> Reader Float
+readRealCS t = readRealCSTag t *> readReal
 
 readReal :: Reader Float
 readReal = runGet getFloat32be <$> bytestring 4
@@ -105,17 +121,26 @@ readReal = runGet getFloat32be <$> bytestring 4
 readDoubleAP :: Reader Double
 readDoubleAP = readDoubleAPTag >> readDouble
 
+readDoubleCS :: TagNumber -> Reader Double
+readDoubleCS t = readDoubleCSTag t >> readDouble
+
 readDouble :: Reader Double
 readDouble = runGet getFloat64be <$> bytestring 8
 
 readOctetStringAP :: Reader [Word8]
 readOctetStringAP = readOctetStringAPTag >>= readOctetString
 
+readOctetStringCS :: TagNumber -> Reader [Word8]
+readOctetStringCS t = readOctetStringCSTag t >>= readOctetString
+
 readOctetString :: Tag -> Reader [Word8]
 readOctetString t = BS.unpack <$> content id t
 
 readStringAP :: Reader String
 readStringAP = readStringAPTag >>= readString
+
+readStringCS :: TagNumber -> Reader String
+readStringCS t = readStringCSTag t >>= readString
 
 readString :: Tag -> Reader String
 readString t =
@@ -126,6 +151,9 @@ readString t =
 
 readBitStringAP :: Reader Prim.BitString
 readBitStringAP = readBitStringAPTag >>= readBitString
+
+readBitStringCS :: TagNumber -> Reader Prim.BitString
+readBitStringCS t = readBitStringCSTag t >>= readBitString
 
 readBitString :: Tag -> Reader Prim.BitString
 readBitString t =
@@ -138,11 +166,17 @@ readBitString t =
 readEnumeratedAP :: Reader Prim.Enumerated
 readEnumeratedAP = readEnumeratedAPTag >>= readEnumerated
 
+readEnumeratedCS :: TagNumber -> Reader Prim.Enumerated
+readEnumeratedCS t = readEnumeratedCSTag t >>= readEnumerated
+
 readEnumerated :: Tag -> Reader Prim.Enumerated
 readEnumerated t = Prim.Enumerated <$> readUnsigned t
 
 readDateAP :: Reader Prim.Date
 readDateAP = readDateAPTag >> readDate
+
+readDateCS :: TagNumber -> Reader Prim.Date
+readDateCS t = readDateCSTag t >> readDate
 
 readDate :: Reader Prim.Date
 readDate = Prim.Date <$> byte <*> byte <*> byte <*> byte
@@ -150,11 +184,17 @@ readDate = Prim.Date <$> byte <*> byte <*> byte <*> byte
 readTimeAP :: Reader Prim.Time
 readTimeAP = readTimeAPTag >> readTime
 
+readTimeCS :: TagNumber -> Reader Prim.Time
+readTimeCS t = readTimeCSTag t >> readTime
+
 readTime :: Reader Prim.Time
 readTime = Prim.Time <$> byte <*> byte <*> byte <*> byte
 
 readObjectIdentifierAP :: Reader Prim.ObjectIdentifier
 readObjectIdentifierAP = readObjectIdentifierAPTag >>= readObjectIdentifier
+
+readObjectIdentifierCS :: TagNumber -> Reader Prim.ObjectIdentifier
+readObjectIdentifierCS t = readObjectIdentifierCSTag t >>= readObjectIdentifier
 
 readObjectIdentifier :: Tag -> Reader Prim.ObjectIdentifier
 readObjectIdentifier t = Prim.ObjectIdentifier . fromIntegral <$> readUnsigned t

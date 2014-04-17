@@ -24,6 +24,18 @@ module BACnet.Writer
     writeTimeAP,
     writeObjectIdentifierAP,
     writeNullCS,
+    writeBoolCS,
+    writeUnsignedCS,
+    writeSignedCS,
+    writeRealCS,
+    writeDoubleCS,
+    writeOctetStringCS,
+    writeStringCS,
+    writeBitStringCS,
+    writeEnumeratedCS,
+    writeDateCS,
+    writeTimeCS,
+    writeObjectIdentifierCS,
   ) where
 
 import BACnet.Prim
@@ -180,7 +192,7 @@ writeObjectIdentifierAP :: ObjectIdentifier -> Writer
 writeObjectIdentifierAP = (writeObjectIdentifierAPTag <>) . unsigned32 . getRawValue
 
 writeObjectIdentifierCS :: TagNumber -> ObjectIdentifier -> Writer
-writeObjectIdentifierCS tn = writeIntegralCS tn writeCSTag . getRawValue
+writeObjectIdentifierCS tn = ((writeCSTag tn  4) <>) . unsigned32 . getRawValue
 
 writeAnyAP :: Any -> Writer
 writeAnyAP Prim.NullAP = writeNullAP

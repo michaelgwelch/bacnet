@@ -8,15 +8,25 @@ module BACnet.Tag.Reader
     readUnsignedAPTag,
     readUnsignedCSTag,
     readSignedAPTag,
+    readSignedCSTag,
     readRealAPTag,
+    readRealCSTag,
     readDoubleAPTag,
+    readDoubleCSTag,
     readOctetStringAPTag,
+    readOctetStringCSTag,
     readStringAPTag,
+    readStringCSTag,
     readBitStringAPTag,
+    readBitStringCSTag,
     readEnumeratedAPTag,
+    readEnumeratedCSTag,
     readDateAPTag,
+    readDateCSTag,
     readTimeAPTag,
+    readTimeCSTag,
     readObjectIdentifierAPTag,
+    readObjectIdentifierCSTag,
     readAnyAPTag,
     readOpenTag,
     readCloseTag
@@ -80,6 +90,9 @@ readOctetStringCSTag t = readCS t (const True) OctetStringCS
 readStringAPTag :: Reader Tag
 readStringAPTag = readAP 7 CharacterStringAP
 
+readStringCSTag :: TagNumber -> Reader Tag
+readStringCSTag t = readCS t (const True) CharacterStringCS
+
 readBitStringAPTag :: Reader Tag
 readBitStringAPTag = readAP 8 BitStringAP
 
@@ -89,14 +102,26 @@ readBitStringCSTag t = readCS t (const True) BitStringCS
 readEnumeratedAPTag :: Reader Tag
 readEnumeratedAPTag = readAP 9 EnumeratedAP
 
+readEnumeratedCSTag :: TagNumber -> Reader Tag
+readEnumeratedCSTag tn = readCS tn (/=0) EnumeratedCS
+
 readDateAPTag :: Reader Tag
 readDateAPTag = sat (== 0xa4) >> return DateAP
+
+readDateCSTag :: TagNumber -> Reader Tag
+readDateCSTag tn = readCS tn (==4) (flip $ const DateCS)
 
 readTimeAPTag :: Reader Tag
 readTimeAPTag = sat (== 0xb4) >> return TimeAP
 
+readTimeCSTag :: TagNumber -> Reader Tag
+readTimeCSTag tn = readCS tn (==4) (flip $ const TimeCS)
+
 readObjectIdentifierAPTag :: Reader Tag
 readObjectIdentifierAPTag = sat (== 0xc4) >> return ObjectIdentifierAP
+
+readObjectIdentifierCSTag :: TagNumber -> Reader Tag
+readObjectIdentifierCSTag tn =  readCS tn (==4)  (flip $ const ObjectIdentifierCS)
 
 readOpenTag :: TagNumber -> Reader Tag
 readOpenTag tn = readTag (==tn) (==classCS) (const True) (==6) (flip $ const Open)

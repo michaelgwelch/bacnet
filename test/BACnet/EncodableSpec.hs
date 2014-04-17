@@ -2,6 +2,7 @@ module BACnet.EncodableSpec where
 
 import Test.Hspec
 import Test.QuickCheck
+import BACnet.Tag.Core (TagNumber)
 import BACnet.Writer
 import BACnet.Reader
 import BACnet.Encodable
@@ -16,16 +17,15 @@ class (Eq a, Show a, Encodable a) => RoundTrippable a where
   roundTrip :: a -> Expectation
   roundTrip a = run bacnetDecode (runW $ bacnetEncode a) `shouldBe` a
 
+instance RoundTrippable Null
 instance RoundTrippable Bool
 instance RoundTrippable Word32
 instance RoundTrippable Int32
 instance RoundTrippable Float
 instance RoundTrippable Double
 instance RoundTrippable OctetString
-
 instance RoundTrippable CharacterString
 instance RoundTrippable BitString
-
 instance RoundTrippable Enumerated
 instance RoundTrippable Date
 instance RoundTrippable Time
@@ -35,6 +35,27 @@ instance RoundTrippable Any
 instance RoundTrippable a => RoundTrippable [a]
 instance RoundTrippable a => RoundTrippable (Maybe a)
 instance (RoundTrippable a, RoundTrippable b) => RoundTrippable (Either a b)
+
+class (Eq a, Show a, CSEncodable a) => CSRoundTrippable a where
+  csroundTrip :: TagNumber -> a -> Expectation
+  csroundTrip tn a = run (csbacnetDecode tn) (runW $ csbacnetEncode tn a) `shouldBe` a
+
+instance CSRoundTrippable Null
+instance CSRoundTrippable Bool
+instance CSRoundTrippable Word32
+instance CSRoundTrippable Int32
+instance CSRoundTrippable Float
+instance CSRoundTrippable Double
+instance CSRoundTrippable OctetString
+instance CSRoundTrippable CharacterString
+instance CSRoundTrippable BitString
+instance CSRoundTrippable Enumerated
+instance CSRoundTrippable Date
+instance CSRoundTrippable Time
+instance CSRoundTrippable ObjectIdentifier
+
+instance Arbitrary Null where
+  arbitrary = return $ Null ()
 
 instance Arbitrary OctetString where
   arbitrary = OctetString <$> arbitrary
@@ -152,7 +173,36 @@ spec =
     describe "Encodable Any" $
       it "round trips" $
         property $ \v -> roundTrip (v :: Any)
-{-}
-    describe "Encodable ObjectIdentifier" $
-      it "round trips" $
-        property $ \o -> roundTrip (o :: ObjectIdentifier)-}
+
+    describeRoundTrip "Null" (Null ())
+
+    describeRoundTrip "Bool" True
+
+    describeRoundTrip "Word32" (undefined :: Word32)
+
+    describeRoundTrip "Int32" (undefined :: Int32)
+
+    describeRoundTrip "Float" (undefined :: Float)
+
+    describeRoundTrip "Double" (undefined :: Double)
+
+    describeRoundTrip "OctetString" (undefined :: OctetString)
+
+    describeRoundTrip "CharacterString" (undefined :: CharacterString)
+
+    describeRoundTrip "BitString" (undefined :: BitString)
+
+    describeRoundTrip "Enumerated" (undefined :: Enumerated)
+
+    describeRoundTrip "Date" (undefined :: Date)
+
+    describeRoundTrip "Time" (undefined :: Time)
+
+    describeRoundTrip "ObjectIdentifier" (undefined :: ObjectIdentifier)
+
+
+describeRoundTrip :: (Arbitrary a, CSRoundTrippable a) => String -> a -> Spec
+describeRoundTrip typeName val =
+  describe ("CSEncodable " ++ typeName) $
+    it "round trips" $
+      property $ \tn v -> csroundTrip tn (v `asTypeOf` val)

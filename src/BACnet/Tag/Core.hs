@@ -40,6 +40,7 @@ data Tag =
         | OctetStringAP Length -- length
         | OctetStringCS TagNumber Length
         | CharacterStringAP Length -- length
+        | CharacterStringCS TagNumber Length
         | BitStringAP Length -- length
         | BitStringCS TagNumber Length
         | EnumeratedAP Length -- length
@@ -66,6 +67,13 @@ tagLength (BitStringAP len) = len
 tagLength (EnumeratedAP len) = len
 tagLength ObjectIdentifierAP = 4
 tagLength (UnsignedCS _ len) = len
+tagLength (SignedCS _ len) = len
+tagLength (OctetStringCS _ len) = len
+tagLength (CharacterStringCS _ len) = len
+tagLength (BitStringCS _ len) = len
+tagLength (EnumeratedCS _ len) = len
+tagLength (ObjectIdentifierCS _) = 4
+
 
 type TagNumber = Word8
 type Length = Word32
