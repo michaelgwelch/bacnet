@@ -60,7 +60,7 @@ instance Arbitrary OctetString where
 
 instance Arbitrary CharacterString where
   arbitrary = CharacterString <$> arbitrary
-  shrink = map CharacterString . shrink . getString
+  shrink = map CharacterString . shrink . characterStringValue
 
 instance Arbitrary Enumerated where
   arbitrary = liftM Enumerated arbitrary
@@ -76,7 +76,7 @@ instance Arbitrary Time where
 
 instance Arbitrary ObjectIdentifier where
   arbitrary = ObjectIdentifier <$> arbitrary
-  shrink = map ObjectIdentifier . shrink . getRawValue
+  shrink = map ObjectIdentifier . shrink . objectIdentifierValue
 
 instance Arbitrary BitString where
   arbitrary =

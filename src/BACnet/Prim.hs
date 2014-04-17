@@ -23,7 +23,7 @@ import Data.Bits (shiftR, shiftL, (.&.), (.|.))
 import Control.Monad (liftM, liftM2)
 import qualified Data.Bits as B
 
-newtype CharacterString = CharacterString { getString :: String }
+newtype CharacterString = CharacterString { characterStringValue :: String }
   deriving (Eq, Show)
 
 newtype OctetString = OctetString { octetStringBytes :: [Word8] }
@@ -72,7 +72,7 @@ data Time = Time
     getHundredth :: Word8
   } deriving (Show, Eq)
 
-newtype ObjectIdentifier = ObjectIdentifier { getRawValue :: Word32 }
+newtype ObjectIdentifier = ObjectIdentifier { objectIdentifierValue :: Word32 }
   deriving (Show, Eq)
 
 objectIdentifier :: Word16 -> Word32 -> Maybe ObjectIdentifier
@@ -87,10 +87,10 @@ objectIdentifier ot inum =
           | otherwise       = Just $ shiftL (fromIntegral ot) 22
 
 getObjectType :: ObjectIdentifier -> Word16
-getObjectType = fromIntegral . (.&. 0x3F) . flip shiftR 22 . getRawValue
+getObjectType = fromIntegral . (.&. 0x3F) . flip shiftR 22 . objectIdentifierValue
 
 getInstanceNumber :: ObjectIdentifier -> Word32
-getInstanceNumber = (.&. 0x003FFFFF) . getRawValue
+getInstanceNumber = (.&. 0x003FFFFF) . objectIdentifierValue
 
 
 data Any =

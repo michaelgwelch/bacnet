@@ -5,7 +5,7 @@ module BACnet.Writer.WriterC where
 
 import BACnet.Writer.Core
 import BACnet.Writer
-import BACnet.Prim (getString, CharacterString, octetStringBytes, OctetString)
+import BACnet.Prim (characterStringValue, CharacterString, octetStringBytes, OctetString)
 import Data.Word
 import Data.Int
 
@@ -50,7 +50,7 @@ writeBoolIfStringIsNotEmpty = not . Prelude.null >$< W' writeBoolAP
 
 -- Example of converting writeStringAP to be writeCharacterStringAP
 writeCharacterStringAP :: WriterC CharacterString
-writeCharacterStringAP = getString >$< W' writeStringAP
+writeCharacterStringAP = characterStringValue >$< W' writeStringAP
 
 writeOctetStringAP' :: WriterC OctetString
 writeOctetStringAP' = octetStringBytes >$< W' writeOctetStringAP

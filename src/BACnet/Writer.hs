@@ -189,10 +189,10 @@ encodeTime :: Time -> BS.ByteString
 encodeTime (Time h m s hs) = BS.pack [h,m,s,hs]
 
 writeObjectIdentifierAP :: ObjectIdentifier -> Writer
-writeObjectIdentifierAP = (writeObjectIdentifierAPTag <>) . unsigned32 . getRawValue
+writeObjectIdentifierAP = (writeObjectIdentifierAPTag <>) . unsigned32 . objectIdentifierValue
 
 writeObjectIdentifierCS :: TagNumber -> ObjectIdentifier -> Writer
-writeObjectIdentifierCS tn = (writeCSTag tn  4 <>) . unsigned32 . getRawValue
+writeObjectIdentifierCS tn = (writeCSTag tn  4 <>) . unsigned32 . objectIdentifierValue
 
 writeAnyAP :: Any -> Writer
 writeAnyAP Prim.NullAP = writeNullAP
