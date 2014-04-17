@@ -17,7 +17,7 @@ class (Eq a, Show a, Encodable a) => RoundTrippable a where
   roundTrip :: a -> Expectation
   roundTrip a = run bacnetDecode (runW $ bacnetEncode a) `shouldBe` a
 
-instance RoundTrippable Null
+instance RoundTrippable ()
 instance RoundTrippable Bool
 instance RoundTrippable Word32
 instance RoundTrippable Int32
@@ -40,7 +40,7 @@ class (Eq a, Show a, CSEncodable a) => CSRoundTrippable a where
   csroundTrip :: TagNumber -> a -> Expectation
   csroundTrip tn a = run (csbacnetDecode tn) (runW $ csbacnetEncode tn a) `shouldBe` a
 
-instance CSRoundTrippable Null
+instance CSRoundTrippable ()
 instance CSRoundTrippable Bool
 instance CSRoundTrippable Word32
 instance CSRoundTrippable Int32
@@ -53,9 +53,6 @@ instance CSRoundTrippable Enumerated
 instance CSRoundTrippable Date
 instance CSRoundTrippable Time
 instance CSRoundTrippable ObjectIdentifier
-
-instance Arbitrary Null where
-  arbitrary = return $ Null ()
 
 instance Arbitrary OctetString where
   arbitrary = OctetString <$> arbitrary
@@ -110,6 +107,10 @@ instance Arbitrary Any where
 spec :: Spec
 spec =
   do
+    describe "Encodable ()" $
+      it "round trips" $
+        property $ \v -> roundTrip (v :: ())
+
     describe "Encodable Bool" $
       it "round trips properly" $
         property $ \b -> roundTrip (b :: Bool)
@@ -174,9 +175,9 @@ spec =
       it "round trips" $
         property $ \v -> roundTrip (v :: Any)
 
-    describeRoundTrip "Null" (Null ())
+    describeRoundTrip "Null" (undefined :: ())
 
-    describeRoundTrip "Bool" True
+    describeRoundTrip "Bool" (undefined :: Bool)
 
     describeRoundTrip "Word32" (undefined :: Word32)
 

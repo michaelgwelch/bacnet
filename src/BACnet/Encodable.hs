@@ -43,9 +43,9 @@ instance (Encodable a, Encodable b) => Encodable (Either a b) where
   bacnetEncode (Right b) = bacnetEncode b
   bacnetDecode = try (Left <$> bacnetDecode) <|> (Right <$> bacnetDecode)
 
-instance Encodable Null where
+instance Encodable () where
   bacnetEncode = const writeNullAP
-  bacnetDecode = Null <$> readNullAP
+  bacnetDecode = readNullAP
 
 instance Encodable Bool where
   bacnetEncode = writeBoolAP
@@ -104,9 +104,9 @@ class CSEncodable a where
   csbacnetDecode :: Word8 -> Reader a
 
 
-instance CSEncodable Null where
+instance CSEncodable () where
   csbacnetEncode = const . writeNullCS
-  csbacnetDecode tn = Null <$> readNullCS tn
+  csbacnetDecode = readNullCS
 
 instance CSEncodable Bool where
   csbacnetEncode = writeBoolCS
