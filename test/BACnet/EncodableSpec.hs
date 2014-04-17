@@ -56,7 +56,7 @@ instance CSRoundTrippable ObjectIdentifier
 
 instance Arbitrary OctetString where
   arbitrary = OctetString <$> arbitrary
-  shrink = map OctetString . shrink . getOSBytes
+  shrink = map OctetString . shrink . octetStringBytes
 
 instance Arbitrary CharacterString where
   arbitrary = CharacterString <$> arbitrary

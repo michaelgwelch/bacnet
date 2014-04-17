@@ -5,7 +5,7 @@ module BACnet.Writer.WriterC where
 
 import BACnet.Writer.Core
 import BACnet.Writer
-import BACnet.Prim (getString, CharacterString, getOSBytes, OctetString)
+import BACnet.Prim (getString, CharacterString, octetStringBytes, OctetString)
 import Data.Word
 import Data.Int
 
@@ -53,4 +53,4 @@ writeCharacterStringAP :: WriterC CharacterString
 writeCharacterStringAP = getString >$< W' writeStringAP
 
 writeOctetStringAP' :: WriterC OctetString
-writeOctetStringAP' = getOSBytes >$< W' writeOctetStringAP
+writeOctetStringAP' = octetStringBytes >$< W' writeOctetStringAP

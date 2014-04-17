@@ -68,7 +68,7 @@ instance Encodable Double where
   bacnetDecode = readDoubleAP
 
 instance Encodable OctetString where
-  bacnetEncode = writeOctetStringAP . getOSBytes
+  bacnetEncode = writeOctetStringAP . octetStringBytes
   bacnetDecode = OctetString <$> readOctetStringAP
 
 instance Encodable CharacterString where
@@ -129,7 +129,7 @@ instance CSEncodable Double where
   csbacnetDecode = readDoubleCS
 
 instance CSEncodable OctetString where
-  csbacnetEncode tn = writeOctetStringCS tn . getOSBytes
+  csbacnetEncode tn = writeOctetStringCS tn . octetStringBytes
   csbacnetDecode tn = OctetString <$> readOctetStringCS tn
 
 instance CSEncodable CharacterString where
