@@ -164,7 +164,7 @@ readAP tn co = readTag (==tn) (==classAP) (const True) (const True) (const co)
 --   and the tag is CS encoded, and the length checking predicate returns true.
 --   It constructs a Tag by using the given constructor @co@.
 readCS :: TagNumber -> LengthPredicate -> CSTagConstructor -> Reader Tag
-readCS tn p co = readTag (==tn) (==classCS) p (const True) co
+readCS tn p = readTag (==tn) (==classCS) p (const True)
 
 type TagNumberPredicate = TagNumber -> Bool
 type ClassPredicate = Class -> Bool
@@ -178,7 +178,7 @@ readTag tagNumberP classP lengthP typeP co
           readExtendedTag b c >>= \tn ->
           readExtendedLength b >>= \len ->
           guard (tagNumberP tn && classP c && lengthP len && typeP b) >>
-          (return $ co tn len)
+          return (co tn len)
       where readClass b = return $ if isCS b then classCS else classAP
             readExtendedTag b c | c == classAP = readTagNumber b
                                 | c == classCS =
