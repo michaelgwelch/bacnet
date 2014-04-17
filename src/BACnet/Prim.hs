@@ -24,7 +24,7 @@ import Data.Bits (shiftR, shiftL, (.&.), (.|.))
 import Control.Monad (liftM, liftM2)
 import qualified Data.Bits as B
 
-newtype Null = Null { unNull :: () }
+newtype Null = Null { unNull :: () } deriving (Eq, Show)
 
 newtype CharacterString = CharacterString { getString :: String }
   deriving (Eq, Show)
