@@ -43,8 +43,28 @@ import Text.Parsec.Error
 import Text.Parsec.Pos
 import Numeric
 
+
+newtype Bytes = Bytes { unbytes :: BS.ByteString }
+
+unpack :: Bytes -> [Word8]
+unpack = BS.unpack . unbytes
+
+cons :: Word8 -> Bytes -> Bytes
+cons b (Bytes bs) = Bytes $ BS.cons b bs
+
+uncons :: Bytes -> Maybe (Word8, Bytes)
+uncons (Bytes bs) =
+    case  BS.uncons bs of
+        Nothing      -> Nothing
+        Just (v, vs) -> Just (v, Bytes vs)
+
+empty :: Bytes
+empty = Bytes BS.empty
+
+
+
 -- | @Reader a@ is a type of parser with return type of @a@.
-newtype Reader a = R { getParser :: Parsec BS.ByteString () a }
+newtype Reader a = R { getParser :: Parsec Bytes () a }
 
 right :: Either ParseError b -> b
 right (Right x) = x
@@ -60,9 +80,9 @@ run r = right . runR r . BS.pack
 -- | Runs the specified reader on the given input. It returns the
 --   result in an @Either ParserError a@
 runR :: Reader a -> BS.ByteString -> Either ParseError a
-runR (R p) = parse p ""
+runR (R p) = parse p "" . Bytes
 
-returnStream :: Parsec BS.ByteString () a -> Parsec BS.ByteString() (a, BS.ByteString)
+returnStream :: Parsec Bytes () a -> Parsec Bytes() (a, Bytes)
 returnStream p =
   do
     val <- p
@@ -74,12 +94,12 @@ returnStream p =
 runS :: Reader a -> [Word8] -> Either ParseError (a, [Word8])
 runS (R p) inp =
   case runR (R (returnStream p)) (BS.pack inp) of
-    Right (v, bs) -> Right (v, BS.unpack bs)
+    Right (v, bs) -> Right (v, unpack bs)
     Left pe -> Left pe
 
 
-instance (Monad m) => Stream BS.ByteString m Word8 where
-  uncons = return . BS.uncons
+instance (Monad m) => Stream Bytes m Word8 where
+  uncons = return . BACnet.Reader.Core.uncons
 
 updatePosWord8  :: SourcePos -> Word8 -> SourcePos
 updatePosWord8 pos b
@@ -122,8 +142,11 @@ bytes n = (:) <$> byte <*> bytes (n-1)
 -- | @bytestring n@ reads and consumes the next n bytes. Returns the
 --   bytes in a 'BS.ByteString'.
 bytestring :: Word8 -> Reader BS.ByteString
-bytestring 0 = return BS.empty
-bytestring n = BS.cons <$> byte <*> bytestring (n-1)
+bytestring n = unbytes <$> bytestring' n
+
+bytestring' :: Word8 -> Reader Bytes
+bytestring' 0 = return BACnet.Reader.Core.empty
+bytestring' n = cons <$> byte <*> bytestring' (n-1)
 
 readerBind :: Reader a -> (a -> Reader b) -> Reader b
 readerBind ra f = R $ getParser ra >>= getParser . f
@@ -136,7 +159,7 @@ try = R . Pr.try . getParser
 
 -- | A reader that returns the remaing input stream.
 getInputStream :: Reader BS.ByteString
-getInputStream = R $ stateInput <$> getParserState
+getInputStream = unbytes <$> (R $ stateInput <$> getParserState)
 
 -- | A reader that returns the current state of the input stream. In other words,
 -- it returns the portion of the stream that has not yet been consumed. It
