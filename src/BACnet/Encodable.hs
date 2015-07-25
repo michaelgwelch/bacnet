@@ -36,12 +36,12 @@ instance Encodable a => Encodable [a] where
 instance Encodable a => Encodable (Maybe a) where
   bacnetEncode Nothing = mempty
   bacnetEncode (Just v) = bacnetEncode v
-  bacnetDecode = try (Just <$> bacnetDecode) <|> return Nothing
+  bacnetDecode =  (Just <$> bacnetDecode) <|> return Nothing
 
 instance (Encodable a, Encodable b) => Encodable (Either a b) where
   bacnetEncode (Left a) = bacnetEncode a
   bacnetEncode (Right b) = bacnetEncode b
-  bacnetDecode = try (Left <$> bacnetDecode) <|> (Right <$> bacnetDecode)
+  bacnetDecode = (Left <$> bacnetDecode) <|> (Right <$> bacnetDecode)
 
 instance Encodable () where
   bacnetEncode = const writeNullAP

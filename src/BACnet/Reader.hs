@@ -116,7 +116,7 @@ readRealCS :: TagNumber -> Reader Float
 readRealCS t = readRealCSTag t *> readReal
 
 readReal :: Reader Float
-readReal = runGet getFloat32be <$> bytestring 4
+readReal = runGet getFloat32be <$> BS.fromStrict <$> bytestring 4
 
 readDoubleAP :: Reader Double
 readDoubleAP = readDoubleAPTag >> readDouble
@@ -125,7 +125,7 @@ readDoubleCS :: TagNumber -> Reader Double
 readDoubleCS t = readDoubleCSTag t >> readDouble
 
 readDouble :: Reader Double
-readDouble = runGet getFloat64be <$> bytestring 8
+readDouble = runGet getFloat64be <$> BS.fromStrict <$> bytestring 8
 
 readOctetStringAP :: Reader [Word8]
 readOctetStringAP = readOctetStringAPTag >>= readOctetString
@@ -147,7 +147,7 @@ readString t =
   do
     sat (==0x00) -- encoding is 0x00 which is the value used to indicate UTF-8 (formerly ANSI X3.4)
     bs <- bytestring $ fromIntegral $ tagLength t - 1
-    return $ UTF8.toString bs
+    return $ UTF8.toString $ BS.fromStrict bs
 
 readBitStringAP :: Reader Prim.BitString
 readBitStringAP = readBitStringAPTag >>= readBitString
@@ -218,7 +218,7 @@ foldbytes = BS.foldl (\acc w -> acc * 256 + fromIntegral w) 0
 --   length specified in the 'Tag', @t@, and returns the value obtained by applying
 --   @f@ to that ByteString.
 content :: (BS.ByteString -> a) -> Tag -> Reader a
-content f t = f <$> bytestring (fromIntegral $ tagLength t)
+content f t = f <$> BS.fromStrict <$> bytestring (fromIntegral $ tagLength t)
 
 foldsbytes :: BS.ByteString -> Int
 foldsbytes bs | BS.null bs = 0
