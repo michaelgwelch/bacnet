@@ -27,8 +27,9 @@ module BACnet.Reader.Core
   sat,
   getInputStream,
   getInputState,
-  getPos,
-  getPos',
+
+  -- * The results
+  ParseResult,
 
 -- * About the Instances
 -- $Instances
@@ -41,9 +42,6 @@ import Control.Monad
 import Numeric
 import qualified Data.Attoparsec.ByteString as P
 
--- FRAGILE - Using Internals of Attoparsec
-import qualified Data.Attoparsec.Internal.Types as AT
-
 
 -- | @Reader a@ is a type of parser with return type of @a@.
 newtype Reader a = R { getParser :: P.Parser a }
@@ -55,11 +53,10 @@ newtype Reader a = R { getParser :: P.Parser a }
 --   value
 run :: Reader a -> [Word8] -> a
 run r = done . P.parse (getParser r) . BS.pack 
-
-done :: P.Result a -> a
-done (P.Fail rem _ m) = error m 
-done (P.Done _ r) = r
-done partial = done $ P.feed partial BS.empty -- Recurse to get an error
+    where done (P.Fail _ _ m) = error m 
+          done (P.Done _ r) = r
+          done partial = 
+            done $ P.feed partial BS.empty -- Recurse to get an error
 
 -- | Runs the specified reader on the given input. It returns the
 --   result in a @P.Result a@
@@ -68,11 +65,30 @@ runR (R p) = fromResult . P.parse p
 
 data ParseResult a = Success a [Word8]
   | Error [Word8] [String] String
-  | NotDone (BS.ByteString -> P.Result a) 
+  | NotDone (BS.ByteString -> P.Result a)
+
+data ParseError = ParseError { col::Int, remaining::[Word8] }
+
+instance Show ParseError where
+  show (ParseError col ws) = prefixStr ++ (colStr col) ++ "\nUnexpected " ++
+    suffix ws where
+                prefixStr = "(line 1, col " 
+                colStr c = (show c) ++ ")"
+                suffix [] = "end of input"
+                suffix (x:xs) = show x
+                          
+
+-- Return function to calculate column
+eitherResult :: Int -> P.Result a -> Either ParseError a
+eitherResult _ (P.Done _ r) = Right r
+eitherResult inpLen (P.Fail rem _ _) = 
+  Left (ParseError (inpLen - (BS.length rem) + 1) (BS.unpack rem))
+eitherResult inpLen partial = 
+  eitherResult inpLen $ P.feed partial BS.empty
 
 instance Show a => Show (ParseResult a) where
-  show (Success r bs) = show (r, bs)
-  show (Error bs context message) = show (bs, context, message)
+  show (Success r bs) = show (r,bs)
+  show (Error bs context message) = "Error at " ++ show bs
   show (NotDone f) = show $ P.Partial f
 
 fromResult :: P.Result a -> ParseResult a
@@ -139,17 +155,6 @@ getInputState :: Reader [Word8]
 getInputState = BS.unpack <$> getInputStream
 
 
--------
--- Note this part is fragile. It's using the internals of
--- attoparsec. This is only used for failure messages. If it
--- breaks, an easy fix is to not worry about position
--------
-getPos :: Reader Int
-getPos = R $ AT.Parser $ \t pos more _ succ' -> succ' t pos more (AT.fromPos pos)
-
-getPos' :: Reader String
-getPos' = show <$> getPos
-
 
 instance Monad Reader where
   fail = R . fail
@@ -191,7 +196,7 @@ instance MonadPlus Reader where
 -- >>> runR byte (BS.pack [0x23, 0x34])
 -- Right 35
 --
--- >>> runR (sat (==0)) (BS.pack [0x23, 0x34])
+-- >>> runS (sat (==0)) (BS.pack [0x23, 0x34])
 -- Left (line 1, column 1):
 -- unexpected 0x23
 --
@@ -209,10 +214,10 @@ instance MonadPlus Reader where
 --
 -- In some instances (testing, for example) it's nice to see how much of
 -- the input stream is left after running a 'Reader'. This can be done with
--- 'runR'. In the following example 5 bytes are read and 5 are yet to be
+-- 'runS'. In the following example 5 bytes are read and 5 are yet to be
 --  consumed.
 --
--- >>> runR (bytes 5) [0,1,2,3,4,5,6,7,8,9]
+-- >>> runS (bytes 5) [0,1,2,3,4,5,6,7,8,9]
 -- Right ([0,1,2,3,4],[5,6,7,8,9])
 --
 --
@@ -240,20 +245,20 @@ instance MonadPlus Reader where
 -- first example shows how even though the first reader fails, the second
 -- one succeeds.
 --
--- >>> runR (mzero `mplus` byte) [1, 2]
+-- >>> runS (mzero `mplus` byte) [1, 2]
 -- Right (1,[2])
 --
 -- In the following example the second reader should succeed, except in trying
 -- the first reader all the input was consumed. Therefore, the second reader
 -- and the overall read represented by the @mplus@ also failed.
 --
--- >>> runR (bytes 3 `mplus` bytes 2) [1, 2]
+-- >>> runS (bytes 3 `mplus` bytes 2) [1, 2]
 -- Left (line 1, column 3):
 -- unexpected end of input
 --
 -- This can be resolved, if desired, by wrapping the first reader with try:
 --
--- >>> runR (try (bytes 3) `mplus` bytes 2) [1,2]
+-- >>> runS (try (bytes 3) `mplus` bytes 2) [1,2]
 -- Right ([1,2],[])
 --
 -- The 'Alternative' instance works just like the 'MonadPlus' instance
