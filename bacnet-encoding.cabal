@@ -10,7 +10,7 @@ name:                bacnet-encoding
 -- PVP summary:      +-+------- breaking API changes
 --                   | | +----- non-breaking API additions
 --                   | | | +--- code changes with no API change
-version:             0.1.1.0
+version:             0.2.1.0
 
 -- A short (one-line) description of the package.
 synopsis:            A library for encoding BACnet data
@@ -53,24 +53,33 @@ cabal-version:       >=1.10
 
 library
   -- Modules exported by the library.
-  exposed-modules:     BACnet.Reader, BACnet.Writer, BACnet.Encodable,
-                       BACnet.Reader.Core, BACnet.Writer.Core, BACnet.Prim,
-                       BACnet, BACnet.Tag.Core, BACnet.Tag.Reader, BACnet.Tag.Writer
+  exposed-modules:  BACnet.Reader
+                    BACnet.Writer
+                    BACnet.Encodable
+                    BACnet.Reader.Core
+                    BACnet.Writer.Core
+                    BACnet.Prim
+                    BACnet
+                    BACnet.Tag.Core
+                    BACnet.Tag.Reader
+                    BACnet.Tag.Writer
 
   -- Modules included in this library but not exported.
-  other-modules:
-                       BACnet.Writer.WriterC,
-                       BACnet.Writer.UnfoldNum
+  other-modules:    BACnet.Writer.WriterC
+                    BACnet.Writer.UnfoldNum
 
   -- LANGUAGE extensions used by modules in this package.
   -- other-extensions:
 
   -- Other library packages from which modules are imported.
-  build-depends:       base >=4.6 && <4.7, bytestring >=0.10 && <0.11,
-                       binary >=0.5 && <0.6,
-                       data-binary-ieee754 >=0.4.4 && <0.5,
-                       parsec >=3.1 && <3.2, transformers >=0.3 && <0.4,
-                       utf8-string >=0.3.7 && <0.4, contravariant >=0.4.4 && <0.5
+  build-depends:  base,
+                  bytestring,
+                  binary,
+                  data-binary-ieee754,
+                  parsec,
+                  transformers,
+                  utf8-string,
+                  contravariant
 
   -- Directories containing source files.
   hs-source-dirs:      src
@@ -82,14 +91,19 @@ Test-Suite tests
   type:                exitcode-stdio-1.0
   main-is:             Tests.hs
   hs-source-dirs:      src, test
-  build-depends:       base >=4.6 && <4.7, bytestring >=0.10 && <0.11, hspec >=1.8 && <1.9,
-                       QuickCheck >=2.6 && <2.7, hspec-expectations >=0.5 && <0.6,
-                       HUnit >=1.2 && <1.3, binary >=0.5 && <0.6,
-                       data-binary-ieee754 >=0.4.4 && <0.5,
-                       parsec >=3.1 && <3.2, transformers >=0.3 && <0.4,
-                       numeric-limits >=0.1.0 && <0.2,
-                       utf8-string >=0.3.7 && <0.4,
-                       contravariant >=0.4.4 && <0.5
+  build-depends:  base,
+                  bytestring,
+                  binary,
+                  data-binary-ieee754,
+                  parsec,
+                  transformers,
+                  utf8-string,
+                  contravariant,
+                  hspec,
+                  QuickCheck,
+                  hspec-expectations,
+                  HUnit,
+                  numeric-limits
 
   default-language:    Haskell2010
 
@@ -97,14 +111,21 @@ Test-Suite doctests
   type:                exitcode-stdio-1.0
   main-is:             doctests.hs
   ghc-options:         -threaded
-  build-depends:       base >=4.6 && <4.7, bytestring >=0.10 && <0.11, hspec >=1.8 && <1.9,
-                       QuickCheck >=2.6 && <2.7, hspec-expectations >=0.5 && <0.6,
-                       HUnit >=1.2 && <1.3, binary >=0.5 && <0.6,
-                       data-binary-ieee754 >=0.4.4 && <0.5,
-                       parsec >=3.1 && <3.2, transformers >=0.3 && <0.4,
-                       numeric-limits >=0.1.0 && <0.2,
-                       utf8-string >=0.3.7 && <0.4,
-                       contravariant >=0.4.4 && <0.5, doctest >=0.9.11 && <0.10
+  build-depends:  base,
+                  bytestring,
+                  binary,
+                  data-binary-ieee754,
+                  parsec,
+                  transformers,
+                  utf8-string,
+                  contravariant,
+                  hspec,
+                  QuickCheck,
+                  hspec-expectations,
+                  HUnit,
+                  numeric-limits,
+                  doctest
+
   default-language:    Haskell2010
 
 source-repository head
