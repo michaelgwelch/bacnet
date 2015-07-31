@@ -40,7 +40,6 @@ import Data.Binary
 import Data.Binary.Get
 import Data.Binary.IEEE754
 import Data.Int
-import Data.Maybe
 import BACnet.Tag.Reader
 import BACnet.Tag.Core
 import BACnet.Reader.Core
@@ -145,7 +144,7 @@ readStringCS t = readStringCSTag t >>= readString
 readString :: Tag -> Reader String
 readString t =
   do
-    sat (==0x00) -- encoding is 0x00 which is the value used to indicate UTF-8 (formerly ANSI X3.4)
+    void $ sat (==0x00) -- encoding is 0x00 which is the value used to indicate UTF-8 (formerly ANSI X3.4)
     bs <- bytestring $ fromIntegral $ tagLength t - 1
     return $ UTF8.toString bs
 
