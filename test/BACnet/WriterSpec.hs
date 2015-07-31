@@ -92,7 +92,7 @@ spec =
         writeSignedAP (-8388609) `shouldWrite` [0x34, 0xFF, 0x7F, 0xFF, 0xFF]
 
       it "writes [0x34, 0x80, 0x00, 0x00, 0x00] for input -2147483648" $
-        writeSignedAP (-2147483648) `shouldWrite`
+        writeSignedAP (fromIntegral (-2147483648)) `shouldWrite`
           [0x34, 0x80, 0x00, 0x00, 0x00]
 
     describe "writeRealAP" $ do
