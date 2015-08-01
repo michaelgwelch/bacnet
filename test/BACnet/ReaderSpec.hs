@@ -7,8 +7,8 @@ import BACnet.Reader
 import BACnet.Prim
 import Data.Maybe (fromJust)
 import Control.Exception (Exception, evaluate)
-import Numeric.Limits
 import BACnet.EncodableSpec ()
+import Numeric.Limits (maxValue)
 
 isPosInfinite :: RealFloat a => a -> Bool
 isPosInfinite f = (f > 0) && isInfinite f
