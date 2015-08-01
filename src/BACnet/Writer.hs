@@ -51,7 +51,6 @@ import Prelude hiding (null)
 import qualified Data.ByteString.Lazy.UTF8 as UTF8
 import qualified Data.ByteString.Lazy as BS
 import Data.Monoid (mempty, Monoid, (<>))
-import Data.Functor.Contravariant
 
 -- | Writes an application encoded null value which is always @0x00@.
 --

@@ -222,5 +222,10 @@ content f t = f <$> bytestring (fromIntegral $ tagLength t)
 foldsbytes :: BS.ByteString -> Int
 foldsbytes bs | BS.null bs = 0
               | otherwise =
-  let (val, len) = BS.foldl (\(accv,accl) w -> (accv * 256 + fromIntegral w, accl+1)) (0,0) (BS.tail bs)
+  let (val, len) = BS.foldl accum (0,0) (BS.tail bs)
   in fromIntegral (fromIntegral (BS.head bs) :: Int8) * 256 ^ len + val
+
+accum :: (Int,Int) -> Word8 -> (Int,Int)
+accum (accv,accl) w = (accv * 256 + fromIntegral w, accl+1) 
+
+

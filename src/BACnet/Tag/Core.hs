@@ -59,6 +59,8 @@ boolVal :: Tag -> Bool
 boolVal (BoolAP val) = val
 
 tagLength :: Tag -> Word32
+tagLength NullAP = 0
+tagLength (BoolAP _) = 0
 tagLength (UnsignedAP len) = len
 tagLength (SignedAP len) = len
 tagLength (OctetStringAP len) = len
