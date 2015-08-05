@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 module BACnet.EncodableSpec where
 
 import Test.Hspec
@@ -83,8 +84,8 @@ instance Arbitrary BitString where
     do
       unusedBits <- choose(0,7)
       singleByte <- arbitrary
-      bitStringBytes <- arbitrary
-      return . fromJust $ bitString unusedBits (singleByte : bitStringBytes)
+      bytes <- arbitrary
+      return . fromJust $ bitString unusedBits (singleByte : bytes)
 
 instance Arbitrary Any where
   arbitrary = oneof [

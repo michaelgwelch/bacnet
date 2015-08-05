@@ -1,7 +1,6 @@
 module BACnet.Writer.WriterCSpec where
 
 import Test.Hspec
-import BACnet.Writer
 import BACnet.Writer.WriterC
 
 spec :: Spec

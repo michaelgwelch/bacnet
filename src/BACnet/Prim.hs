@@ -14,12 +14,14 @@ module BACnet.Prim
     Time(..),
     ObjectIdentifier(..),
     objectIdentifier,
+    getObjectType,
+    getInstanceNumber,
     Any(..)
   ) where
 
 import Data.Word (Word8, Word16, Word32, Word)
 import Data.Int (Int32)
-import Data.Bits (shiftR, shiftL, (.&.), (.|.))
+import Data.Bits (shiftR, shiftL, (.&.))
 import Control.Applicative ((<$>), (<*>))
 import qualified Data.Bits as B
 
@@ -36,8 +38,8 @@ bitStringEmpty :: BitString
 bitStringEmpty = BitString 0 []
 
 bitString :: Word8 -> [Word8] -> Maybe BitString
-bitString n bs | null bs && n /= 0 || n >= 8 = Nothing
-               | n < 8                       = Just $ BitString n bs
+bitString n [] = if (n /= 0) then Nothing else Just bitStringEmpty
+bitString n bs@(_:_) = if (n >= 8) then Nothing else Just $ BitString n bs
 
 bitStringLength :: BitString -> Int
 bitStringLength bs = 1 + length (bitStringBytes bs)

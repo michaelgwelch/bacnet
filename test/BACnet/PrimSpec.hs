@@ -6,6 +6,7 @@ import BACnet.Prim
 import Control.Exception (evaluate)
 import Data.Maybe (fromJust)
 
+spec :: SpecWith ()
 spec =
 
     describe "testBit" $ do

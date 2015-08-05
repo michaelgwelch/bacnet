@@ -1,15 +1,14 @@
 module BACnet.ReaderSpec where
 
-import Test.HUnit
+import Data.Int (Int32)
 import Test.Hspec
 import Test.QuickCheck
 import BACnet.Reader
 import BACnet.Prim
 import Data.Maybe (fromJust)
-import Data.Word
-import Data.Int
 import Control.Exception (Exception, evaluate)
-import Numeric.Limits
+import BACnet.EncodableSpec ()
+import Numeric.Limits (maxValue)
 
 isPosInfinite :: RealFloat a => a -> Bool
 isPosInfinite f = (f > 0) && isInfinite f
@@ -23,14 +22,13 @@ posInfinity = 1/0
 negInfinity :: RealFloat a => a
 negInfinity = -posInfinity
 
+
+
 shouldThrow' :: Exception e => a -> Selector e -> Expectation
 shouldThrow' a s = evaluate a `shouldThrow` s
 
 eval :: a -> IO ()
-eval a =
-  do
-    evaluate a
-    return ()
+eval a = evaluate a >> return ()
 
 spec :: Spec
 spec = do
@@ -152,8 +150,7 @@ spec = do
 
     it "reads [x034, 0x80, 0x00, 0x00, 0x00] and returns -2147483648" $
       run readSignedAP [0x34, 0x80, 0x00, 0x00, 0x00] `shouldBe` 
-        fromIntegral (-2147483648)
-
+          (minBound :: Int32)
 
 
   describe "readRealAP" $ do

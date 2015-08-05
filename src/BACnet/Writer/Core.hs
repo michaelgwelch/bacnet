@@ -28,9 +28,8 @@ import Data.ByteString.Lazy.Builder (
   Builder, floatBE, doubleBE)
 import Data.Word (Word8, Word16, Word32)
 import Data.Int (Int8, Int16)
-import Data.Monoid (Monoid, (<>), mempty, mappend, mconcat)
+import Data.Monoid (Monoid, (<>), mempty, mappend)
 import Prelude hiding (null, maybe)
-import qualified Prelude as P
 
 
 -- | A writer. All of the BACnet writers are this type. Writers

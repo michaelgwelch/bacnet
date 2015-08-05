@@ -1,16 +1,16 @@
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 module BACnet.WriterSpec where
 
 import Test.Hspec
 import Test.QuickCheck
 import BACnet.Prim
 import BACnet.Writer
-import Numeric.Limits
-import Data.Functor ((<$>))
 import Data.Maybe (fromJust)
 import Data.Word (Word8)
-import BACnet.EncodableSpec
+import Data.Int (Int32)
 import Data.Monoid
 import Control.Applicative
+import BACnet.EncodableSpec ()
 
 shouldWrite :: Writer -> [Word8] -> Expectation
 shouldWrite = shouldBe . runW
@@ -92,7 +92,7 @@ spec =
         writeSignedAP (-8388609) `shouldWrite` [0x34, 0xFF, 0x7F, 0xFF, 0xFF]
 
       it "writes [0x34, 0x80, 0x00, 0x00, 0x00] for input -2147483648" $
-        writeSignedAP (fromIntegral (-2147483648)) `shouldWrite`
+        writeSignedAP (minBound :: Int32) `shouldWrite`
           [0x34, 0x80, 0x00, 0x00, 0x00]
 
     describe "writeRealAP" $ do
@@ -223,7 +223,8 @@ spec =
 
 
 
-
+-- Orphan instance since I don't want to be dependent on 
+-- Arbitrary in my core library when it's only useful in tests.
 
 instance Arbitrary Writer where
   arbitrary = oneof [

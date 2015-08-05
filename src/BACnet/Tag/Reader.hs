@@ -35,7 +35,7 @@ module BACnet.Tag.Reader
 import BACnet.Tag.Core
 import BACnet.Reader.Core
 import Data.Word
-import Control.Monad (when, void, guard)
+import Control.Monad (guard)
 import Control.Applicative ((<|>))
 
 
@@ -185,7 +185,6 @@ readTag tagNumberP classP lengthP typeP co
                                     (guard (tagNumber b == 15) >> byte) <|>
                                     readTagNumber b
             readTagNumber = return . tagNumber
-            readLVT b = return $ lvt b
             readExtendedLength = lengthOfContent
 
 

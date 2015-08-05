@@ -11,8 +11,6 @@ module BACnet.Encodable
   CSEncodable(..)
   ) where
 
-import BACnet.Writer.Core
-import qualified BACnet.Writer.Core as WC
 import BACnet.Writer
 import BACnet.Reader.Core
 import BACnet.Reader

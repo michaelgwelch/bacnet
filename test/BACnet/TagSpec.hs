@@ -2,7 +2,6 @@ module BACnet.TagSpec where
 
 import BACnet.Tag.Core
 import BACnet.Tag.Reader
-import Test.QuickCheck
 import Test.Hspec
 import BACnet.Reader
 

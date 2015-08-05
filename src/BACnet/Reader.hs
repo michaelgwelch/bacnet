@@ -40,7 +40,6 @@ import Data.Binary
 import Data.Binary.Get
 import Data.Binary.IEEE754
 import Data.Int
-import Data.Maybe
 import BACnet.Tag.Reader
 import BACnet.Tag.Core
 import BACnet.Reader.Core
@@ -145,7 +144,7 @@ readStringCS t = readStringCSTag t >>= readString
 readString :: Tag -> Reader String
 readString t =
   do
-    sat (==0x00) -- encoding is 0x00 which is the value used to indicate UTF-8 (formerly ANSI X3.4)
+    void $ sat (==0x00) -- encoding is 0x00 which is the value used to indicate UTF-8 (formerly ANSI X3.4)
     bs <- bytestring $ fromIntegral $ tagLength t - 1
     return $ UTF8.toString bs
 
@@ -223,5 +222,10 @@ content f t = f <$> bytestring (fromIntegral $ tagLength t)
 foldsbytes :: BS.ByteString -> Int
 foldsbytes bs | BS.null bs = 0
               | otherwise =
-  let (val, len) = BS.foldl (\(accv,accl) w -> (accv * 256 + fromIntegral w, accl+1)) (0,0) (BS.tail bs)
+  let (val, len) = BS.foldl accum (0,0) (BS.tail bs)
   in fromIntegral (fromIntegral (BS.head bs) :: Int8) * 256 ^ len + val
+
+accum :: (Int,Int) -> Word8 -> (Int,Int)
+accum (accv,accl) w = (accv * 256 + fromIntegral w, accl+1) 
+
+

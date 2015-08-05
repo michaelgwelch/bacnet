@@ -59,6 +59,8 @@ boolVal :: Tag -> Bool
 boolVal (BoolAP val) = val
 
 tagLength :: Tag -> Word32
+tagLength NullAP = 0
+tagLength (BoolAP _) = 0
 tagLength (UnsignedAP len) = len
 tagLength (SignedAP len) = len
 tagLength (OctetStringAP len) = len
@@ -78,7 +80,11 @@ tagLength (ObjectIdentifierCS _) = 4
 type TagNumber = Word8
 type Length = Word32
 newtype Class = Class { classValue :: Word8 } deriving Eq
+
+classAP :: Class
 classAP = Class 0
+
+classCS :: Class
 classCS = Class 8
 
 -- | 'True' if the Class bit (the 3rd bit) is not set
@@ -123,7 +129,7 @@ isClose = clvtMatches 0x0F
 
 -- | 'True' if 'lvt' == 'extendedLength'
 isExtendedLength :: Word8 -> Bool
-isExtendedLength = (== 0x05) . lvt
+isExtendedLength = (== extendedLength) . lvt
 
 
 -- | Returns the tag number value encoded into an initial octet.

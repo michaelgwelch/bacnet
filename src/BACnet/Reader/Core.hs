@@ -102,7 +102,7 @@ instance (Monad m) => Stream Bytes m Word8 where
   uncons = return . BACnet.Reader.Core.uncons
 
 updatePosWord8  :: SourcePos -> Word8 -> SourcePos
-updatePosWord8 pos b
+updatePosWord8 pos _
     = newPos (sourceName pos) (sourceLine pos) (sourceColumn pos + 1)
 
 -- | The reader @sat f@ succeeds for any byte for which the supplied function
@@ -112,7 +112,7 @@ sat p =
   R (tokenPrim showByte nextPos testByte)
   where
     showByte = ("0x"++) . flip showHex ""
-    nextPos p b _ = updatePosWord8 p b
+    nextPos pos b _ = updatePosWord8 pos b
     testByte b = if p b then Just b else Nothing
 
 -- | This reader succeeds for any byte that is read. Returns the read byte.
