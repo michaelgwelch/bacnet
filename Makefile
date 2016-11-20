@@ -20,6 +20,9 @@ dump-imports:
 docs:
 	cabal haddock --hyperlink-source
 
+deps:
+	cabal build tests --enable-tests --only-dependencies
+
 .PHONY: test
 .PHONY: configure
 .PHONY: confgiureTest
